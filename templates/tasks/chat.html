@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Чат отдела — RaTracker{% endblock %}
+{% block content %}
+<section class="department-chat" id="department-chat" data-user-id="{{ user.pk }}" data-messages="{% url 'chat_messages' %}" data-send="{% url 'chat_send' %}" data-read="{% url 'chat_mark_read' %}">
+  <div class="chat-header"><h1>Чат отдела</h1><p>Общая переписка сотрудников · история хранится 6 месяцев</p><button type="button" id="chat-notifications-open" class="chat-settings-trigger">⚙ Настройки уведомлений</button></div>
+  <section id="chat-notification-panel" class="chat-notification-panel" hidden aria-label="Настройки уведомлений чата">
+    <h2>Уведомления чата</h2>
+    <label><input type="checkbox" name="in_app"> Всплывающие уведомления внутри RaTracker</label>
+    <label><input type="checkbox" name="desktop"> Системные уведомления Windows</label>
+    <label><input type="checkbox" name="sound"> Звуковой сигнал</label>
+    <label><input type="checkbox" name="mentions"> Приоритетные уведомления при @упоминании</label>
+    <label>Громкость <output id="chat-volume-label">25%</output><input type="range" name="volume" min="0" max="100" step="5"></label>
+    <p class="chat-settings-note">Для системных уведомлений разрешите их в браузере. Требуется HTTPS или localhost. Настройки сохраняются для вашей учётной записи.</p>
+    <p id="chat-settings-feedback" role="status"></p>
+    <button type="button" id="chat-sound-test">Проверить звук</button>
+  </section>
+  <div id="chat-history" class="chat-history" role="log" aria-live="polite"><div class="chat-hint">Загрузка сообщений…</div></div>
+  <button type="button" class="chat-more" id="chat-more" hidden>Показать предыдущие сообщения</button>
+  <div id="chat-reply" class="chat-reply" hidden><span id="chat-reply-label"></span><button type="button" id="chat-reply-cancel" aria-label="Отменить ответ">×</button></div>
+  <div id="chat-mentions" class="chat-mentions" hidden></div>
+  <div id="chat-emojis" class="chat-emojis" hidden></div>
+  <form id="chat-form" class="chat-form"><button type="button" id="chat-emoji-button" title="Эмодзи" aria-label="Эмодзи">☺</button><textarea id="chat-input" rows="2" maxlength="2000" placeholder="Сообщение… Введите @ для упоминания" required></textarea><button type="submit" id="chat-send-button">Отправить</button></form>
+  <p id="chat-error" class="chat-error" role="alert" hidden></p>
+  <div id="chat-users" hidden>{% for employee in chat_users %}<span data-id="{{ employee.pk }}" data-name="{{ employee.get_full_name|default:employee.username }}"></span>{% endfor %}</div>
+</section>
+<script defer src="{% static 'js/chat.js' %}?v=099"></script>
+{% endblock %}

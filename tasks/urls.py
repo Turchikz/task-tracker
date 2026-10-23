@@ -1,8 +1,19 @@
 from django.urls import path
 
-from . import views
+from . import views, chat
 
 urlpatterns = [
+    path("chat/", chat.room, name="department_chat"),
+    path("chat/api/messages/", chat.messages, name="chat_messages"),
+    path("chat/api/send/", chat.send, name="chat_send"),
+    path("chat/api/status/", chat.status, name="chat_status"),
+    path("chat/api/notification-settings/", chat.notification_settings, name="chat_notification_settings"),
+    path("chat/api/notification-events/", chat.notification_events, name="chat_notification_events"),
+    path("chat/api/read/", chat.mark_read, name="chat_mark_read"),
+    path("ideas/", views.feature_ideas, name="feature_ideas"),
+    path("ideas/new/", views.feature_idea_create, name="feature_idea_create"),
+    path("ideas/<int:pk>/vote/", views.feature_idea_vote, name="feature_idea_vote"),
+    path("ideas/<int:pk>/status/", views.feature_idea_status, name="feature_idea_status"),
     path("notifications/sound-feed/", views.sound_notifications_feed, name="sound_notifications_feed"),
     path("health/", views.health, name="health"),
     path("", views.home, name="home"),

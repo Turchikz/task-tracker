@@ -29,7 +29,7 @@ from .forms import (
     TaskTemplateForm,
     SavedTaskFilterForm,
 )
-from .models import EmployeeAbsence, Notification, SavedTaskFilter, Task, TaskEvent, TaskImage, TaskTemplate, TaskMemberProgress
+from .models import FeatureIdea, FeatureVote, EmployeeAbsence, Notification, SavedTaskFilter, Task, TaskEvent, TaskImage, TaskTemplate, TaskMemberProgress
 from .assignments import transfer_primary_assignee, replace_additional_assignee
 from .permissions import assignable_users, can_manage_task, is_manager, manager_users
 from .signals import create_notification
@@ -180,8 +180,9 @@ def task_list(request):
         qs = qs.filter(status=status)
     if priority in valid_priorities:
         qs = qs.filter(priority=priority)
-    if is_manager(request.user) and assigned.isdigit():
-        qs = qs.filter(Q(assigned_to_id=int(assigned)) | Q(additional_assignees__id=int(assigned))).distinct()
+    if is_manager(request.user) and (assigned == "me" or assigned.isdigit()):
+        assignee_id = request.user.pk if assigned == "me" else int(assigned)
+        qs = qs.filter(Q(assigned_to_id=assignee_id) | Q(additional_assignees__id=assignee_id)).distinct()
     if is_manager(request.user) and responsible.isdigit():
         qs = qs.filter(responsible_manager_id=int(responsible))
     if overdue == "1":
@@ -203,9 +204,12 @@ def task_list(request):
     params.pop("page", None)
 
     active_filter_count = sum(bool(v) for v in (status, priority, assigned, responsible, overdue))
+    # Compare the same canonical representation used by saved_filter_create.
+    # SavedTaskFilter stores parameters in JSONField, not query_string.
+    current_parameters = _normalize_saved_filter(params.urlencode())
     active_saved_filter = next(
         (saved for saved in request.user.saved_task_filters.all()
-         if saved.query_string == params.urlencode()), None
+         if saved.parameters == current_parameters), None
     )
     return render(
         request,
@@ -1409,3 +1413,73 @@ def sound_notifications_feed(request):
 def workload_guide(request):
     """Document the exact workload scoring rules implemented in services.py."""
     return render(request, "tasks/workload_guide.html")
+
+
+@login_required
+def feature_ideas(request):
+    from django.contrib.auth.models import User
+    from .constants import EMPLOYEES_GROUP
+    employee = request.user.is_active and request.user.groups.filter(name=EMPLOYEES_GROUP).exists()
+    ideas = list(FeatureIdea.objects.select_related("author").prefetch_related("votes"))
+    votes = dict(FeatureVote.objects.filter(user=request.user).values_list("idea_id", "choice"))
+    return render(request, "tasks/feature_ideas.html", {
+        "ideas": ideas, "my_votes": votes, "can_vote": employee,
+        "electorate": User.objects.filter(is_active=True, groups__name=EMPLOYEES_GROUP).distinct().count(),
+        "statuses": FeatureIdea.Status.choices,
+    })
+
+
+@login_required
+def feature_idea_create(request):
+    if request.method != "POST":
+        return redirect("feature_ideas")
+    title = request.POST.get("title", "").strip()
+    description = request.POST.get("description", "").strip()
+    if not (3 <= len(title) <= 160 and 10 <= len(description) <= 4000):
+        messages.error(request, "Название должно содержать 3–160 символов, описание — 10–4000.")
+    else:
+        FeatureIdea.objects.create(title=title, description=description, author=request.user)
+        messages.success(request, "Предложение опубликовано.")
+    return redirect("feature_ideas")
+
+
+@login_required
+def feature_idea_vote(request, pk):
+    from .constants import EMPLOYEES_GROUP
+    if request.method != "POST":
+        return HttpResponse(status=405)
+    if not request.user.is_active or not request.user.groups.filter(name=EMPLOYEES_GROUP).exists():
+        return HttpResponseForbidden("Голосовать могут только активные сотрудники группы Employees.")
+    idea = get_object_or_404(FeatureIdea, pk=pk)
+    if idea.status != FeatureIdea.Status.VOTING:
+        messages.error(request, "Голосование по этому предложению завершено.")
+        return redirect("feature_ideas")
+    choice = request.POST.get("choice")
+    if choice not in ("yes", "no", "withdraw"):
+        return HttpResponse(status=400)
+    with transaction.atomic():
+        idea = FeatureIdea.objects.select_for_update().get(pk=pk)
+        if idea.status != FeatureIdea.Status.VOTING:
+            return redirect("feature_ideas")
+        if choice == "withdraw":
+            FeatureVote.objects.filter(idea=idea, user=request.user).delete()
+        else:
+            FeatureVote.objects.update_or_create(idea=idea, user=request.user, defaults={"choice": choice == "yes"})
+        idea.refresh_review_status()
+    return redirect("feature_ideas")
+
+
+@login_required
+def feature_idea_status(request, pk):
+    if request.method != "POST":
+        return HttpResponse(status=405)
+    if not is_manager(request.user):
+        return HttpResponseForbidden("Только руководитель может менять статус.")
+    idea = get_object_or_404(FeatureIdea, pk=pk)
+    new_status = request.POST.get("status")
+    allowed = {FeatureIdea.Status.IN_PROGRESS, FeatureIdea.Status.IMPLEMENTED, FeatureIdea.Status.REJECTED}
+    if new_status not in allowed or idea.status == FeatureIdea.Status.VOTING:
+        return HttpResponse(status=400)
+    idea.status = new_status
+    idea.save(update_fields=["status", "updated_at"])
+    return redirect("feature_ideas")

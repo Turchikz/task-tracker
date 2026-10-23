@@ -32,7 +32,9 @@ function spawn(options={}){
  b.title='Поймать мышку';b.setAttribute('aria-label','Поймать мышку');
  b.style.setProperty('--from',right?'calc(100vw + 80px)':'-80px');
  b.style.setProperty('--to',right?'-80px':'calc(100vw + 80px)');
- const img=document.createElement('img');img.alt='';img.src=body.dataset.mouseImage;b.append(img);
+ b.style.animationDuration=(3.9+Math.random()*1.9).toFixed(2)+'s';
+ b.classList.toggle('running-left',right);
+ const sprite=document.createElement('span');sprite.className='ratracker-mouse-sprite';sprite.setAttribute('aria-hidden','true');b.append(sprite);
  document.body.append(b);runner=b;
  let caught=false;
  b.addEventListener('click',()=>{
@@ -52,7 +54,7 @@ function spawn(options={}){
 window.RaTrackerMouse={
  spawn:(options={})=>spawn({...options,force:true}),
  remove:()=>{if(runner){runner.remove();runner=null;}},
- status:()=>({active:!!runner,streak,version:'0.9.6',enabled:true})
+ status:()=>({active:!!runner,streak,version:'0.9.8',enabled:true})
 };
 function resetClock(){lastTick=performance.now();if(runner){runner.remove();runner=null;}}
 document.addEventListener('visibilitychange',resetClock);
@@ -66,5 +68,5 @@ setInterval(()=>{
  activeMs+=elapsed;
  if(activeMs>=nextRun){activeMs=0;nextRun=(10+Math.random()*10)*60000;spawn();}
 },1000);
-}else{window.RaTrackerMouse={spawn:()=>false,remove:()=>{},status:()=>({active:false,version:'0.9.6',enabled:false,reason:'desktop-or-reduced-motion'})};}
+}else{window.RaTrackerMouse={spawn:()=>false,remove:()=>{},status:()=>({active:false,version:'0.9.8',enabled:false,reason:'desktop-or-reduced-motion'})};}
 })();

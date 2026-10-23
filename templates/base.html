@@ -38,11 +38,15 @@
   <script defer src="{% static 'js/assignees.js' %}?v=090"></script>
   <script defer src="{% static 'js/notification_drawer.js' %}?v=090"></script>
   <link rel="stylesheet" href="{% static 'css/v090.css' %}?v=090">
-  <link rel="stylesheet" href="{% static 'css/soundscape.css' %}?v=096">
-  <script defer src="{% static 'js/soundscape.js' %}?v=096"></script>
+  <link rel="stylesheet" href="{% static 'css/soundscape.css' %}?v=098">
+  <link rel="stylesheet" href="{% static 'css/feature_ideas.css' %}?v=098">
+  <link rel="stylesheet" href="{% static 'css/chat.css' %}?v=099">
+  <script defer src="{% static 'js/soundscape.js' %}?v=098"></script>
+  <script defer src="{% static 'js/chat_badge.js' %}?v=099"></script>
+  <script defer src="{% static 'js/chat_notifications.js' %}?v=0910"></script>
   <link rel="stylesheet" href="{% static 'css/release096.css' %}?v=096">
 </head>
-<body{% if user.is_authenticated %} data-sound-user="{{ user.pk }}" data-sound-feed="{% url 'sound_notifications_feed' %}" data-mouse-image="{% static 'img/rat-brand.png' %}"{% endif %}>
+<body{% if user.is_authenticated %} data-chat-notification-settings="{% url 'chat_notification_settings' %}" data-chat-notification-events="{% url 'chat_notification_events' %}" data-chat-user="{{ user.pk }}" data-sound-user="{{ user.pk }}" data-sound-feed="{% url 'sound_notifications_feed' %}" data-mouse-image="{% static 'img/rat-brand.png' %}"{% endif %}>
 <header class="topbar" data-site-header>
   <a class="brand" href="{% url 'home' %}" aria-label="RaTracker — главная">
     <img class="brand-rat" src="{% static 'img/rat-brand.png' %}" alt="">
@@ -56,6 +60,8 @@
       <a href="{% url 'my_today' %}" class="{% if request.resolver_match.url_name == 'my_today' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'my_today' %}aria-current="page"{% endif %}>Сегодня</a>
     {% endif %}
     <a href="{% url 'task_list' %}" class="{% if request.resolver_match.url_name == 'task_list' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'task_list' %}aria-current="page"{% endif %}>Задачи</a>
+    <a href="{% url 'department_chat' %}" class="{% if request.resolver_match.url_name == 'department_chat' %}is-current{% endif %}">Чат <span id="chat-nav-badge" class="chat-nav-badge" hidden></span></a>
+    <a href="{% url 'feature_ideas' %}" class="{% if request.resolver_match.url_name == 'feature_ideas' %}is-current{% endif %}">Идеи</a>
     <a href="{% url 'kanban' %}" class="{% if request.resolver_match.url_name == 'kanban' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'kanban' %}aria-current="page"{% endif %}>Канбан</a>
     <a href="{% url 'calendar' %}" class="{% if request.resolver_match.url_name == 'calendar' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'calendar' %}aria-current="page"{% endif %}>Календарь</a>
     {% if is_manager %}<a href="{% url 'workload_timeline' %}" class="{% if request.resolver_match.url_name == 'workload_timeline' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'workload_timeline' %}aria-current="page"{% endif %}>Загрузка</a>{% endif %}

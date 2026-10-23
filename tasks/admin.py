@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import (
+    FeatureIdea, FeatureVote,
     EmployeeAbsence,
     Notification,
     SavedTaskFilter,
@@ -197,3 +198,15 @@ class TaskMemberProgressAdmin(admin.ModelAdmin):
     list_filter = ("state",)
     search_fields = ("task__title", "user__username", "user__first_name", "user__last_name")
     list_select_related = ("task", "user")
+
+
+@admin.register(FeatureIdea)
+class FeatureIdeaAdmin(admin.ModelAdmin):
+    list_display = ("title", "author", "status", "created_at")
+    list_filter = ("status",)
+    search_fields = ("title", "description")
+
+
+@admin.register(FeatureVote)
+class FeatureVoteAdmin(admin.ModelAdmin):
+    list_display = ("idea", "user", "choice", "updated_at")

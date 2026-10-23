@@ -61,6 +61,18 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  chat-cleanup:
+    build: .
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      RUN_MIGRATIONS: "0"
+    command: ["sh", "-c", "while true; do python manage.py purge_old_chat; sleep 86400; done"]
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+
   nginx:
     build:
       context: .

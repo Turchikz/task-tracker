@@ -536,3 +536,94 @@ class WorkCalendarDay(models.Model):
         state = "Рабочий" if self.is_working_day else "Нерабочий"
         suffix = f" — {self.name}" if self.name else ""
         return f"{self.date:%d.%m.%Y}: {state}{suffix}"
+
+
+import math
+
+class FeatureIdea(models.Model):
+    class Status(models.TextChoices):
+        VOTING = "voting", "Голосование"
+        REVIEW = "review", "Будет рассмотрено"
+        IN_PROGRESS = "in_progress", "В работе"
+        IMPLEMENTED = "implemented", "Реализовано"
+        REJECTED = "rejected", "Отклонено"
+
+    title = models.CharField("Название идеи", max_length=160)
+    description = models.TextField("Описание")
+    author = models.ForeignKey(User, on_delete=models.PROTECT, related_name="feature_ideas")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.VOTING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    @property
+    def electorate_size(self):
+        return User.objects.filter(is_active=True, groups__name=EMPLOYEES_GROUP).distinct().count()
+
+    @property
+    def yes_votes(self):
+        return self.votes.filter(user__is_active=True, user__groups__name=EMPLOYEES_GROUP, choice=True).distinct().count()
+
+    @property
+    def no_votes(self):
+        return self.votes.filter(user__is_active=True, user__groups__name=EMPLOYEES_GROUP, choice=False).distinct().count()
+
+    @property
+    def approval_percent(self):
+        total = self.electorate_size
+        return round(100 * self.yes_votes / total, 1) if total else 0
+
+    @property
+    def threshold(self):
+        return math.ceil(self.electorate_size * 0.8)
+
+    @property
+    def qualifies(self):
+        return self.electorate_size > 0 and self.yes_votes >= self.threshold
+
+    def refresh_review_status(self):
+        # Review decision is sticky once reached; managers can later advance status.
+        if self.status == self.Status.VOTING and self.qualifies:
+            self.status = self.Status.REVIEW
+            self.save(update_fields=["status", "updated_at"])
+
+    def __str__(self):
+        return self.title
+
+
+class FeatureVote(models.Model):
+    idea = models.ForeignKey(FeatureIdea, on_delete=models.CASCADE, related_name="votes")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="feature_votes")
+    choice = models.BooleanField("За")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["idea", "user"], name="unique_feature_idea_vote")]
+
+
+class ChatMessage(models.Model):
+    author = models.ForeignKey(User, on_delete=models.PROTECT, related_name="chat_messages")
+    text = models.TextField(max_length=2000)
+    reply_to = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="replies")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    mentions = models.ManyToManyField(User, blank=True, related_name="chat_mentions")
+
+    class Meta:
+        ordering = ["id"]
+
+
+class ChatReadState(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="chat_read_state")
+    last_read_message_id = models.PositiveBigIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class ChatNotificationSettings(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="chat_notification_settings")
+    in_app = models.BooleanField(default=True)
+    desktop = models.BooleanField(default=False)
+    sound = models.BooleanField(default=True)
+    mentions = models.BooleanField(default=True)
+    volume = models.PositiveSmallIntegerField(default=25, validators=[MinValueValidator(0), MaxValueValidator(100)])

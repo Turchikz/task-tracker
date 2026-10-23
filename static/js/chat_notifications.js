@@ -1,0 +1,26 @@
+(()=>{'use strict';
+const body=document.body, settingsUrl=body.dataset.chatNotificationSettings, eventsUrl=body.dataset.chatNotificationEvents, uid=body.dataset.chatUser;
+if(!settingsUrl||!eventsUrl||!uid)return;
+const defaults={in_app:true,desktop:false,sound:true,mentions:true,volume:25};let prefs={...defaults},cursor=null,activated=false,ctx=null;
+const key='ratracker:chat-alert:'+uid;
+const cookie=name=>document.cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith(name+'='))?.slice(name.length+1)||'';
+const panel=document.getElementById('chat-notification-panel'),open=document.getElementById('chat-notifications-open'),feedback=document.getElementById('chat-settings-feedback');
+const area=document.createElement('div');area.className='chat-notification-toast-area';area.setAttribute('aria-live','polite');document.body.append(area);
+['pointerdown','keydown'].forEach(type=>document.addEventListener(type,()=>{activated=true},{capture:true,once:true}));
+function sound(){if(!prefs.sound||!prefs.volume||!activated)return;try{ctx??=new(window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();const t=ctx.currentTime;for(const [hz,delay] of [[700,0],[920,.12]]){const osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=hz;gain.gain.setValueAtTime(.0001,t+delay);gain.gain.exponentialRampToValueAtTime(Math.min(.12,prefs.volume/850),t+delay+.02);gain.gain.exponentialRampToValueAtTime(.0001,t+delay+.16);osc.connect(gain);gain.connect(ctx.destination);osc.start(t+delay);osc.stop(t+delay+.18)}}catch(_){}}
+function toast(event){const b=document.createElement('button');b.type='button';b.className='chat-notification-toast';const title=document.createElement('strong'),text=document.createElement('span');title.textContent=(event.mention?'@ Упоминание · ':'')+event.author;text.textContent=event.text;b.append(title,text);b.addEventListener('click',()=>location.assign('/chat/'));area.append(b);setTimeout(()=>b.remove(),6500)}
+function desktop(event){if(!prefs.desktop||!('Notification'in window)||Notification.permission!=='granted'||!window.isSecureContext)return;try{const n=new Notification((event.mention?'@ ':'')+event.author+' · RaTracker',{body:event.text,tag:'ratracker-chat-'+event.id});n.onclick=()=>{window.focus();location.assign('/chat/');n.close()}}catch(_){}}
+function settingsRender(){if(!panel)return;for(const [k,v]of Object.entries(prefs)){const e=panel.querySelector('[name="'+k+'"]');if(e){if(k==='volume')e.value=v;else e.checked=v}}panel.querySelector('#chat-volume-label').textContent=prefs.volume+'%'}
+async function save(k,v){const old=prefs[k];prefs[k]=v;try{const r=await fetch(settingsUrl,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':decodeURIComponent(cookie('csrftoken'))},body:JSON.stringify({[k]:v})});if(!r.ok)throw Error('Не удалось сохранить настройки');prefs={...prefs,...(await r.json()).settings};if(feedback)feedback.textContent='Настройки сохранены'}catch(_){prefs[k]=old;if(feedback)feedback.textContent='Ошибка сохранения. Попробуйте ещё раз'}settingsRender()}
+async function init(){try{const r=await fetch(settingsUrl,{credentials:'same-origin'});if(r.ok)prefs={...prefs,...(await r.json()).settings}}catch(_){}settingsRender();try{const r=await fetch(eventsUrl+'?after=0',{credentials:'same-origin'});if(r.ok){const data=await r.json();cursor=data.latest}}catch(_){}setInterval(poll,3000)}
+async function poll(){if(cursor===null)return;try{const r=await fetch(eventsUrl+'?after='+cursor,{credentials:'same-origin',cache:'no-store'});if(!r.ok)return;const d=await r.json();const events=d.events||[];cursor=Math.max(cursor,d.latest||0);if(!events.length)return;
+// Claim a single notification across multiple open tabs. The database retains unread state independently.
+const last=Number(localStorage.getItem(key)||0);const eligible=events.filter(e=>e.id>last&&(!e.mention||prefs.mentions));if(!eligible.length)return;
+localStorage.setItem(key,String(Math.max(last,...events.map(e=>e.id))));
+// Do not disturb while the user is reading the chat in the foreground.
+if(location.pathname.startsWith('/chat/')&&!document.hidden&&document.hasFocus())return;
+const event=eligible.find(e=>e.mention)||eligible[eligible.length-1];if(prefs.in_app)toast(event);desktop(event);sound();
+}catch(_){}}
+if(panel&&open){open.addEventListener('click',()=>{panel.hidden=!panel.hidden;settingsRender()});for(const k of ['in_app','desktop','sound','mentions','volume']){const el=panel.querySelector('[name="'+k+'"]');el?.addEventListener(k==='volume'?'change':'change',async()=>{let v=k==='volume'?Number(el.value):el.checked;if(k==='desktop'&&v){if(!window.isSecureContext||!('Notification'in window)){if(feedback)feedback.textContent='Системные уведомления доступны только через HTTPS или localhost';el.checked=false;return}try{const permission=await Notification.requestPermission();if(permission!=='granted'){if(feedback)feedback.textContent='Браузер не разрешил уведомления';el.checked=false;return}}catch(_){el.checked=false;return}}await save(k,v)})}panel.querySelector('#chat-sound-test')?.addEventListener('click',()=>{activated=true;sound()})}
+init();
+})();
