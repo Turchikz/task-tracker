@@ -43,7 +43,7 @@ function Invoke-DockerCompose {
 
     & docker compose @Arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "docker compose завершился с кодом $LASTEXITCODE: $($Arguments -join ' ')"
+        throw "docker compose завершился с кодом $(LASTEXITCODE): $($Arguments -join ' ')"
     }
 }
 

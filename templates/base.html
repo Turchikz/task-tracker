@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="{% static 'css/components.css' %}?v=081">
   <link rel="stylesheet" href="{% static 'css/pages.css' %}?v=080">
   <script defer src="{% static 'js/ux.js' %}?v=080"></script>
-  <link rel="stylesheet" href="{% static 'css/microinteractions.css' %}?v=082">
+  <link rel="stylesheet" href="{% static 'css/microinteractions.css' %}?v=093">
   <link rel="stylesheet" href="{% static 'css/team_tasks.css' %}?v=083">
   <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 
@@ -39,7 +39,7 @@
   <script defer src="{% static 'js/notification_drawer.js' %}?v=090"></script>
   <link rel="stylesheet" href="{% static 'css/v090.css' %}?v=090">
   <link rel="stylesheet" href="{% static 'css/soundscape.css' %}?v=091">
-  <script defer src="{% static 'js/soundscape.js' %}?v=091"></script>
+  <script defer src="{% static 'js/soundscape.js' %}?v=093"></script>
 </head>
 <body{% if user.is_authenticated %} data-sound-user="{{ user.pk }}" data-sound-feed="{% url 'sound_notifications_feed' %}" data-mouse-image="{% static 'img/rat-brand.png' %}"{% endif %}>
 <header class="topbar" data-site-header>
@@ -67,8 +67,10 @@
           <a href="{% url 'activity_feed' %}">Активность</a>
           <a href="{% url 'absences' %}">Отсутствия</a>
           <a href="{% url 'template_list' %}">Шаблоны</a>
+          <a href="{% url 'workload_guide' %}">Как считается нагрузка</a>
         {% else %}
           <a href="{% url 'notifications' %}">Уведомления</a>
+          <a href="{% url 'workload_guide' %}">Как считается нагрузка</a>
         {% endif %}
       </div>
     </details>

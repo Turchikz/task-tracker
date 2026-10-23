@@ -1403,3 +1403,9 @@ def sound_notifications_feed(request):
     response = JsonResponse({"latest": item["id"] if item else 0, "kind": item["kind"] if item else None})
     response["Cache-Control"] = "no-store"
     return response
+
+
+@login_required
+def workload_guide(request):
+    """Document the exact workload scoring rules implemented in services.py."""
+    return render(request, "tasks/workload_guide.html")

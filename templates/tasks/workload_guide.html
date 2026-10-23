@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Расчёт нагрузки — RaTracker{% endblock %}
+{% block content %}
+<section class="page-heading"><div><h1>Как рассчитывается нагрузка</h1><p class="muted">Правила расчёта баллов и примеры для сотрудников и руководителей.</p></div></section>
+<div class="card" style="padding:20px;margin-bottom:18px"><h2>Формула одной задачи</h2>
+<p><strong>Баллы задачи = трудоёмкость + приоритет + срок + статус.</strong></p>
+<p>Если у задачи выключен параметр «Учитывать в нагрузке», её вклад равен <strong>0 баллов</strong>.</p></div>
+<div class="card" style="padding:20px;margin-bottom:18px"><h2>Таблицы баллов</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px">
+<div><h3>Трудоёмкость</h3><table class="table"><tbody><tr><td>Маленькая</td><td>1</td></tr><tr><td>Средняя</td><td>2</td></tr><tr><td>Большая</td><td>3</td></tr><tr><td>Очень большая</td><td>5</td></tr></tbody></table></div>
+<div><h3>Приоритет</h3><table class="table"><tbody><tr><td>Низкий</td><td>1</td></tr><tr><td>Обычный</td><td>2</td></tr><tr><td>Высокий</td><td>3</td></tr><tr><td>Срочный</td><td>5</td></tr></tbody></table></div>
+<div><h3>Срок выполнения</h3><table class="table"><tbody><tr><td>Просрочено</td><td>4</td></tr><tr><td>Сегодня</td><td>3</td></tr><tr><td>Через 1–2 дня</td><td>2</td></tr><tr><td>Через 3–7 дней</td><td>1</td></tr><tr><td>Позже 7 дней или без срока</td><td>0</td></tr></tbody></table></div>
+<div><h3>Статус</h3><table class="table"><tbody><tr><td>В работе</td><td>1</td></tr><tr><td>Новая</td><td>0</td></tr><tr><td>На доработке</td><td>0</td></tr></tbody></table></div>
+</div></div>
+<div class="card" style="padding:20px;margin-bottom:18px"><h2>Примеры</h2>
+<p><strong>Пример 1. Обычная задача:</strong> средняя трудоёмкость (2) + обычный приоритет (2) + срок через 5 дней (1) + новая (0) = <strong>5 баллов</strong>.</p>
+<p><strong>Пример 2. Срочная работа:</strong> большая трудоёмкость (3) + срочный приоритет (5) + срок сегодня (3) + в работе (1) = <strong>12 баллов</strong>.</p>
+<p><strong>Пример 3. Просроченная задача:</strong> очень большая трудоёмкость (5) + высокий приоритет (3) + срок прошёл (4) + в работе (1) = <strong>13 баллов</strong>.</p>
+<p><strong>Пример 4. Нагрузка сотрудника:</strong> три активные задачи на 5, 12 и 13 баллов = <strong>30 баллов</strong> суммарно.</p></div>
+<div class="card" style="padding:20px;margin-bottom:18px"><h2>Уровни загрузки</h2>
+<table class="table"><thead><tr><th>Сумма</th><th>Уровень</th></tr></thead><tbody><tr><td>0–7 баллов</td><td>Низкая</td></tr><tr><td>8–19 баллов</td><td>Умеренная</td></tr><tr><td>20 баллов и более</td><td>Высокая</td></tr></tbody></table>
+<p>Индикатор заполнения шкалы: <strong>баллы / 30 × 100%</strong>, максимум 100%. Это визуальная шкала, а не доля рабочего времени.</p></div>
+<div class="card" style="padding:20px;margin-bottom:18px"><h2>Что важно учитывать</h2>
+<ul><li>В сумму входят задачи со статусами «Новая», «В работе» и «На доработке». Задачи «На проверке» не учитываются.</li>
+<li>Одна и та же задача учитывается целиком у каждого участника команды — основного и дополнительных исполнителей. Баллы между ними не делятся.</li>
+<li>Срочность пересчитывается по календарным дням относительно сегодняшней даты.</li>
+<li>При текущем отсутствии сотрудника уровень отображается как «Отсутствует», даже если за ним числятся задачи.</li>
+<li>Баллы — ориентир для распределения задач, а не оценка производительности сотрудника или фактически отработанных часов.</li></ul></div>
+{% endblock %}

@@ -30,6 +30,7 @@ urlpatterns = [
     path("today/", views.my_today, name="my_today"),
     path("dashboard/", views.manager_dashboard, name="manager_dashboard"),
     path("workload/", views.workload_timeline, name="workload_timeline"),
+    path("workload/guide/", views.workload_guide, name="workload_guide"),
     path("calendar/", views.calendar_view, name="calendar"),
     path("analytics/", views.analytics, name="analytics"),
     path("analytics/export/", views.analytics_export, name="analytics_export"),
