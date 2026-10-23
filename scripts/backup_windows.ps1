@@ -43,7 +43,7 @@ function Invoke-DockerCompose {
 
     & docker compose @Arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "docker compose завершился с кодом $(LASTEXITCODE): $($Arguments -join ' ')"
+        throw "docker compose завершился с кодом ${LASTEXITCODE}: $($Arguments -join ' ')"
     }
 }
 
@@ -125,11 +125,17 @@ try {
         Copy-Item $VersionFile (Join-Path $WorkDir "VERSION")
     }
 
+    # A release ZIP has no .git folder. Git metadata is optional.
     $commit = "unknown"
-    if (Get-Command git -ErrorAction SilentlyContinue) {
-        $gitOutput = @(& git rev-parse --short HEAD 2>$null)
-        if ($LASTEXITCODE -eq 0 -and $gitOutput.Count -gt 0) {
-            $commit = "$($gitOutput[0])".Trim()
+    if ((Test-Path (Join-Path $ProjectDir ".git")) -and (Get-Command git -ErrorAction SilentlyContinue)) {
+        try {
+            # Do not capture native stderr as a terminating PowerShell error.
+            $gitOutput = & git -C $ProjectDir rev-parse --short HEAD 2>$null
+            if ($LASTEXITCODE -eq 0 -and $gitOutput) {
+                $commit = ([string](@($gitOutput)[0])).Trim()
+            }
+        } catch {
+            $commit = "unknown"
         }
     }
 
@@ -218,10 +224,10 @@ catch {
 finally {
     # Best-effort cleanup inside containers if an earlier step failed.
     try {
-        & docker compose exec -T db rm -f $ContainerDbDump *> $null
+        if (Get-Command docker -ErrorAction SilentlyContinue) { & docker compose exec -T db rm -f $ContainerDbDump *> $null }
     } catch {}
     try {
-        & docker compose exec -T web rm -f $ContainerMediaArchive *> $null
+        if (Get-Command docker -ErrorAction SilentlyContinue) { & docker compose exec -T web rm -f $ContainerMediaArchive *> $null }
     } catch {}
 
     if (Test-Path $WorkDir) {
