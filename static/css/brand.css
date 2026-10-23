@@ -1,0 +1,54 @@
+
+/* Task Tracker mascot in the brand */
+.brand{
+  display:inline-flex;
+  align-items:center;
+  gap:0;
+  min-height:44px;
+  overflow:visible;
+  white-space:nowrap;
+}
+
+.brand-rat{
+  display:block;
+  width:48px;
+  height:48px;
+  margin:-7px -8px -7px -7px;
+  object-fit:contain;
+  object-position:center;
+  transform:rotate(-4deg) translateY(1px);
+  transform-origin:center;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.18));
+  transition:transform .18s ease,filter .18s ease;
+}
+
+.brand-title{
+  position:relative;
+  z-index:1;
+  padding-left:7px;
+  font-weight:800;
+  font-size:20px;
+  line-height:1;
+}
+
+.brand:hover .brand-rat{
+  transform:rotate(0deg) translateY(-1px) scale(1.04);
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.24));
+}
+
+@media(max-width:800px){
+  .brand-rat{
+    width:44px;
+    height:44px;
+  }
+
+  .brand-title{
+    font-size:19px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .brand-rat{
+    transition:none;
+  }
+}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}#{{ task.pk }} {{ task.title }}{% endblock %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="Навигация"><a href="{% url 'task_list' %}">Задачи</a><span>→</span><span>#{{ task.pk }}</span></nav>
+<div class="task-detail-head">
+  <div>
+    <div class="task-head-badges"><span class="task-id">#{{ task.pk }}</span>{% include "tasks/_status_badge.html" with task=task %}{% include "tasks/_priority_badge.html" with task=task %}<span class="deadline {{ task.deadline_state }}">{{ task.deadline_label }}</span></div>
+    <h1>{{ task.title }}</h1>
+    <p class="muted team-header-line">{% include "partials/team_avatars.html" with task=task %} Исполнители: <strong>{{ task.team_names }}</strong></p>
+  </div>
+</div>
+
+{% if team_progress|length > 1 %}
+<section class="card team-progress" id="team-progress">
+  <div class="section-heading"><div><h2>Готовность участников</h2><p class="muted">Каждый сотрудник отмечает только свою часть. Отметки помогают видеть прогресс участников; общий статус и проверка задачи остаются без изменений.</p></div>
+  <span class="status-badge {% if team_all_ready %}status-done{% else %}status-in_progress{% endif %}">{% if team_all_ready %}Все готовы{% else %}Есть незавершённые этапы{% endif %}</span></div>
+  <div class="member-progress-grid">
+    {% for item in team_progress %}
+    <div class="member-progress-row"><span class="avatar-initials">{{ item.user.first_name|default:item.user.username|slice:':1' }}{{ item.user.last_name|slice:':1' }}</span>
+      <strong>{{ item.user.get_full_name|default:item.user.username }}</strong>
+      <span class="status-badge {% if item.state == 'ready' %}status-done{% elif item.state == 'in_progress' %}status-in_progress{% else %}status-new{% endif %}">{{ item.label }}</span>
+      {% if item.user.pk == user.pk and not is_manager and task.status != 'review' and task.status != 'done' and task.status != 'cancelled' %}
+        <form method="post" action="{% url 'task_member_progress_update' task.pk %}">{% csrf_token %}
+          <select name="state" aria-label="Моя готовность"><option value="pending" {% if item.state == 'pending' %}selected{% endif %}>Не приступил</option><option value="in_progress" {% if item.state == 'in_progress' %}selected{% endif %}>В работе</option><option value="ready" {% if item.state == 'ready' %}selected{% endif %}>Готово</option></select>
+          <button class="btn mini secondary" type="submit">Сохранить</button>
+        </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+<div class="task-action-bar task-action-priority">
+  {% if can_employee_edit %}
+    <a class="btn secondary secondary-task-action" href="{% url 'task_edit' task.pk %}">Редактировать</a>
+  {% elif can_manage_task %}
+    <a class="btn secondary secondary-task-action" href="{% url 'task_edit' task.pk %}">Редактировать</a>
+  {% endif %}
+
+  <button class="btn secondary secondary-task-action" type="button" data-copy-task-link="{{ request.build_absolute_uri }}">Копировать ссылку</button>
+
+  {% if is_manager %}
+    {% if can_manage_task %}
+      {% if task.status == 'review' %}
+        <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="accept"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn success" type="submit">Принять задачу</button></form>
+        <a class="btn danger" href="#revision-review">Вернуть на доработку</a>
+      {% elif task.status == 'new' or task.status == 'revision' %}
+        <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn primary" type="submit">Принять в работу</button></form>
+        <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="done"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn" type="submit">Отметить выполненной</button></form>
+      {% elif task.status == 'in_progress' %}
+        <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="done"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn" type="submit">Отметить выполненной</button></form>
+      {% endif %}
+    {% endif %}
+  {% else %}
+    {% if task.status == 'new' or task.status == 'revision' %}
+      <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn primary" type="submit">Начать работу</button></form>
+    {% elif task.status == 'in_progress' %}
+      <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="submit"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn primary" type="submit">Выполнено — на проверку</button></form>
+    {% endif %}
+  {% endif %}
+</div>
+
+{% if is_manager and not can_manage_task %}
+<div class="flash">
+  Ответственный за задачу — {% if task.responsible_manager %}{{ task.responsible_manager.get_full_name|default:task.responsible_manager.username }}{% else %}{{ task.created_by.get_full_name|default:task.created_by.username }}{% endif %}.
+  Для вас она доступна только для просмотра.
+</div>
+{% endif %}
+
+{% if task.status == 'revision' and task.revision_reason %}
+<div class="revision-box"><strong>Что нужно доработать</strong><div class="preline">{{ task.revision_reason }}</div></div>
+{% endif %}
+
+<div class="task-detail-layout">
+  <section class="card task-description-card"><div class="section-heading"><h2>Описание</h2></div><div class="preline task-description">{{ task.description|default:"Описание не указано." }}</div></section>
+  <aside class="card task-facts-card">
+    <h2>Параметры</h2>
+    <dl class="facts-list">
+      <div><dt>Основной исполнитель</dt><dd>{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</dd></div>
+      {% if task.additional_assignees.count %}
+      <div><dt>Соисполнители</dt><dd>{% for member in task.additional_assignees.all %}<span class="team-person">{{ member.get_full_name|default:member.username }}</span>{% endfor %}</dd></div>
+      {% endif %}
+      <div><dt>Ответственный</dt><dd>{% if task.responsible_manager %}{{ task.responsible_manager.get_full_name|default:task.responsible_manager.username }}{% else %}{{ task.created_by.get_full_name|default:task.created_by.username }}{% endif %}</dd></div>
+      <div><dt>Автор</dt><dd>{{ task.created_by.get_full_name|default:task.created_by.username }}</dd></div>
+      <div><dt>Приоритет</dt><dd>{% include "tasks/_priority_badge.html" with task=task %}</dd></div>
+      <div><dt>Трудоёмкость</dt><dd>{{ task.get_effort_display }}</dd></div>
+      <div><dt>Создана</dt><dd>{{ task.created_at|date:"d.m.Y H:i" }}</dd></div>
+      <div><dt>Изменена</dt><dd>{{ task.updated_at|date:"d.m.Y H:i" }}</dd></div>
+    </dl>
+  </aside>
+</div>
+
+{% if can_manage_task and handover_form and task.status != 'done' and task.status != 'cancelled' and task.status != 'review' %}
+<section class="card task-handover-card" id="task-handover">
+  <details class="task-handover-details">
+    <summary class="task-handover-summary"><span>Передать задачу другому сотруднику</span><span class="muted">Больничный, отпуск или перераспределение работы</span></summary>
+    <div class="handover-info">Передача не создаёт новую задачу: сохраняются описание, срок, статус, фотографии, комментарии и история. Прежний исполнитель будет снят с задачи, если не оставить его соисполнителем.</div>
+    <form method="post" action="{% url 'task_handover' task.pk %}" class="task-handover-form">
+      {% csrf_token %}
+      <div class="field">{{ handover_form.to_employee.label_tag }}{{ handover_form.to_employee }}</div>
+      <div class="field">{{ handover_form.reason.label_tag }}{{ handover_form.reason }}</div>
+      <label class="check handover-keep">{{ handover_form.keep_previous }} <span>{{ handover_form.keep_previous.label }}</span></label>
+      <button class="btn primary" type="submit">Подтвердить передачу</button>
+    </form>
+  </details>
+</section>
+{% endif %}
+
+{% if task.handovers.count %}
+<section class="card task-handover-history">
+  <h2>История передач</h2>
+  <div class="handover-list">
+  {% for transfer in task.handovers.all %}
+    <div class="handover-entry">
+      <div><strong>{{ transfer.from_employee.get_full_name|default:transfer.from_employee.username }} → {{ transfer.to_employee.get_full_name|default:transfer.to_employee.username }}</strong>
+      <div class="muted">{{ transfer.created_at|date:'d.m.Y H:i' }} · передал: {{ transfer.changed_by.get_full_name|default:transfer.changed_by.username }}</div></div>
+      <div>{{ transfer.reason }}{% if transfer.keep_previous %} <small class="muted">Прежний исполнитель остался в команде</small>{% endif %}</div>
+    </div>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="plan-fact-section">
+  <h2>План / факт</h2>
+  <div class="plan-fact-grid">
+    <div class="card plan-fact-card"><span class="plan-fact-label">План</span><div class="plan-fact-row"><span>Начало</span><strong>{% if task.start_date %}{{ task.start_date|date:"d.m.Y" }}{% else %}—{% endif %}</strong></div><div class="plan-fact-row"><span>Срок</span><strong>{% if task.due_date %}{{ task.due_date|date:"d.m.Y" }}{% else %}—{% endif %}</strong></div></div>
+    <div class="card plan-fact-card"><span class="plan-fact-label">Факт</span><div class="plan-fact-row"><span>Начата</span><strong>{% if task.started_at %}{{ task.started_at|date:"d.m.Y H:i" }}{% else %}—{% endif %}</strong></div><div class="plan-fact-row"><span>На проверке</span><strong>{% if task.submitted_at %}{{ task.submitted_at|date:"d.m.Y H:i" }}{% else %}—{% endif %}</strong></div><div class="plan-fact-row"><span>Принята</span><strong>{% if task.completed_at %}{{ task.completed_at|date:"d.m.Y H:i" }}{% else %}—{% endif %}</strong></div></div>
+  </div>
+</section>
+
+<section class="images-section">
+  <div class="section-heading"><div><h2>Фото и скриншоты</h2><p class="muted">JPG, PNG или WebP, до 8 МБ. Файлы доступны только пользователям, имеющим доступ к задаче.</p></div><span class="count-pill">{{ task.images.all|length }}</span></div>
+  <div class="image-gallery">
+    {% for image in task.images.all %}
+      <figure class="task-image-card">
+        <a href="{% url 'task_image_file' task.pk image.pk %}" target="_blank" rel="noopener"><img src="{% url 'task_image_file' task.pk image.pk %}" alt="{{ image.original_name }}" loading="lazy"></a>
+        <figcaption><span title="{{ image.original_name }}">{{ image.original_name }}</span><small>{{ image.uploaded_by.get_full_name|default:image.uploaded_by.username }} · {{ image.created_at|date:"d.m.Y H:i" }}</small></figcaption>
+        {% if can_manage_task or not is_manager and image.uploaded_by_id == user.id %}
+          <form method="post" action="{% url 'task_image_delete' task.pk image.pk %}" onsubmit="return confirm('Удалить изображение?');">{% csrf_token %}<button class="link-danger" type="submit">Удалить</button></form>
+        {% endif %}
+      </figure>
+    {% empty %}<div class="empty">Изображений пока нет.</div>{% endfor %}
+  </div>
+
+  {% if can_manage_task or not is_manager %}
+  <form method="post" enctype="multipart/form-data" action="{% url 'task_image_upload' task.pk %}" class="image-upload-form">
+    {% csrf_token %}{{ image_form.image }}{% if image_form.image.errors %}<div class="error">{{ image_form.image.errors }}</div>{% endif %}<button class="btn secondary" type="submit">Добавить изображение</button>
+  </form>
+  {% endif %}
+</section>
+
+{% if is_manager and task.status == 'review' %}
+  {% if can_manage_task %}
+  <section id="revision-review" class="card review-actions"><div><h2>Проверка результата</h2><p class="muted">Если результат требует исправлений, укажите конкретную причину. Она будет показана исполнителю и сохранится в истории.</p></div><form method="post" action="{% url 'task_request_revision' task.pk %}" class="revision-form">{% csrf_token %}<label for="id_revision_reason"><strong>Причина доработки</strong></label>{{ revision_form.revision_reason }}{% if revision_form.revision_reason.errors %}<div class="error">{{ revision_form.revision_reason.errors }}</div>{% endif %}<button class="btn danger" type="submit">Вернуть на доработку</button></form></section>
+  {% endif %}
+{% endif %}
+
+<section class="comments-section">
+  <div class="section-heading"><div><h2>Комментарии</h2><p class="muted">Ctrl+Enter отправляет комментарий.</p></div><span class="count-pill">{{ task.comments.all|length }}</span></div>
+  <div class="comments-list">
+    {% for comment in task.comments.all %}<article class="comment-item"><div class="comment-avatar">{% if comment.author %}{{ comment.author.first_name|default:comment.author.username|slice:":1" }}{% else %}?{% endif %}</div><div class="comment-body"><div class="comment-meta"><strong>{% if comment.author %}{{ comment.author.get_full_name|default:comment.author.username }}{% else %}Удалённый пользователь{% endif %}</strong><span>{{ comment.created_at|date:"d.m.Y H:i" }}</span></div><div class="preline">{{ comment.text }}</div></div></article>{% empty %}<div class="empty">Комментариев пока нет.</div>{% endfor %}
+  </div>
+  {% if can_manage_task or not is_manager %}
+  <form method="post" action="{% url 'task_comment_add' task.pk %}" class="comment-form">{% csrf_token %}{{ comment_form.text }}{% if comment_form.text.errors %}<div class="error">{{ comment_form.text.errors }}</div>{% endif %}<button class="btn primary" type="submit">Добавить комментарий</button></form>
+  {% endif %}
+</section>
+
+<section class="history-section"><div class="section-heading"><h2>История задачи</h2></div><div class="history-list">{% for event in task.history.all %}<div class="history-event{% if forloop.counter > 5 %} history-extra{% endif %}"><div class="history-dot"></div><div><div><strong>{{ event.message }}</strong></div><div class="muted">{{ event.created_at|date:"d.m.Y H:i" }} · {% if event.actor %}{{ event.actor.get_full_name|default:event.actor.username }}{% else %}Система{% endif %}</div></div></div>{% empty %}<div class="empty">История появится после первого изменения задачи.</div>{% endfor %}</div><button type="button" class="btn secondary history-show-more" data-history-toggle hidden>Показать всю историю</button></section>
+{% endblock %}

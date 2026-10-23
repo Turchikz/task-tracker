@@ -1,0 +1,6 @@
+<span class="team-avatar-stack" aria-label="Исполнители: {{ task.team_names }}" title="{{ task.team_names }}">
+  {% for member in task.team_members %}
+    {% if forloop.counter <= 4 %}<span class="team-avatar" title="{{ member.get_full_name|default:member.username }}" aria-hidden="true">{{ member.first_name|default:member.username|slice:':1' }}{{ member.last_name|slice:':1' }}</span>{% endif %}
+  {% endfor %}
+  {% if task.team_members|length > 4 %}<span class="team-avatar team-avatar-more">+{{ task.team_members|length|add:'-4' }}</span>{% endif %}
+</span>

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Дашборд руководителя{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Дашборд руководителя</h1><p class="muted">Текущее состояние задач отдела.</p></div><a class="btn primary" href="{% url 'task_create' %}">+ Новая задача</a></div>
+<div class="stats stats-clickable">
+  <a class="stat" href="{% url 'task_list' %}?quick=current"><span>Текущих</span><strong>{{ stats.active }}</strong><small>Посмотреть →</small></a>
+  <a class="stat" href="{% url 'review_queue' %}"><span>На проверке</span><strong>{{ stats.review }}</strong><small>Моя очередь →</small></a>
+  <a class="stat" href="{% url 'task_list' %}?quick=overdue"><span>Просроченных</span><strong>{{ stats.overdue }}</strong><small>Посмотреть →</small></a>
+  <a class="stat" href="{% url 'task_list' %}?quick=today"><span>Срок сегодня</span><strong>{{ stats.today }}</strong><small>Посмотреть →</small></a>
+  <a class="stat" href="{% url 'task_list' %}?priority=urgent"><span>Срочных</span><strong>{{ stats.urgent }}</strong><small>Посмотреть →</small></a>
+  <a class="stat" href="{% url 'task_list' %}?quick=done"><span>Выполнено за 7 дней</span><strong>{{ stats.completed_week }}</strong><small>Все завершённые →</small></a>
+</div>
+
+{% include "partials/workload_heatmap.html" %}
+
+{% if user.is_superuser %}<div class="backup-shortcut"><a class="backup-link backup-{{ backup.state }}" href="{% url 'backup_monitor' %}"><span class="backup-status-dot status-{{ backup.state }}"></span>Backup: {{ backup.label }} <span aria-hidden="true">→</span></a></div>{% endif %}
+{% if active_absences %}
+<section class="absence-banner"><strong>Сейчас отсутствуют:</strong>{% for absence in active_absences %}<span>{{ absence.user.get_full_name|default:absence.user.username }} до {{ absence.end_date|date:"d.m" }}{% if absence.reason %} · {{ absence.reason }}{% endif %}</span>{% endfor %}<a href="{% url 'absences' %}">Управление</a></section>
+{% endif %}
+
+<section class="card review-dashboard-card"><div class="card-head-inline"><div><h2>Ожидают проверки</h2><p class="muted">Задачи, которые сотрудники отметили выполненными.</p></div><a class="btn secondary" href="{% url 'review_queue' %}">Все на проверке{% if stats.review %} ({{ stats.review }}){% endif %}</a></div><div class="task-cards">{% for task in reviews %}<a class="task-card" href="{% url 'task_detail' task.pk %}"><div><strong>#{{ task.pk }} {{ task.title }}</strong><div class="muted">{{ task.team_names }} · отправлено {{ task.submitted_at|date:"d.m.Y H:i" }}</div></div>{% include "tasks/_status_badge.html" with task=task %}</a>{% empty %}<div class="empty">Новых результатов для проверки нет.</div>{% endfor %}</div></section>
+
+<div class="dashboard-grid">
+<section class="card"><div class="card-head-inline"><div><h2>Загрузка сотрудников</h2><p class="muted">Отсутствующие сотрудники перемещаются вниз списка назначения.</p></div><a class="btn secondary" href="{% url 'workload_timeline' %}">План по дням</a></div><div class="ranking">{% for row in ranking %}<div class="rank-row {% if row.absence %}rank-absent{% endif %}"><div><strong>{{ row.user.get_full_name|default:row.user.username }}</strong><div class="muted">{{ row.active_count }} в работе · {{ row.urgent_count }} срочных · {{ row.due_soon_count }} до 3 дней · {{ row.overdue_count }} просрочено</div>{% if row.absence %}<div class="absence-note">Отсутствует до {{ row.absence.end_date|date:"d.m.Y" }}{% if row.absence.reason %} · {{ row.absence.reason }}{% endif %}</div>{% endif %}</div><div class="load-compact"><span class="load-indicator load-{{ row.load_level }}" title="{{ row.load_label }} загрузка">{{ row.score }}</span><span class="load-meter" title="{{ row.load_label }} загрузка"><span class="load-fill load-{{ row.load_level }}" style="width:{{ row.load_percent }}%"></span></span></div></div>{% empty %}<div class="empty">Добавьте сотрудников в группу Employees.</div>{% endfor %}</div></section>
+<section class="card"><h2>Требуют внимания</h2><div class="task-cards">{% for task in attention %}<a class="task-card" href="{% url 'task_detail' task.pk %}"><div><strong>#{{ task.pk }} {{ task.title }}</strong><div class="muted">{{ task.team_names }} · ответственный: {% if task.responsible_manager %}{{ task.responsible_manager.get_full_name|default:task.responsible_manager.username }}{% else %}{{ task.created_by.get_full_name|default:task.created_by.username }}{% endif %}</div></div><div class="task-card-badges">{% include "tasks/_status_badge.html" with task=task %}<span class="deadline {{ task.deadline_state }}">{{ task.deadline_label }}</span><small class="attention-reason">{% if task.due_date and task.due_date < today %}Просрочено{% elif task.priority == 'urgent' %}Срочный приоритет{% elif task.due_date == today %}Срок сегодня{% else %}Близкий срок{% endif %}</small></div></a>{% empty %}<div class="empty">Критичных задач нет.</div>{% endfor %}</div></section>
+</div>
+
+<section class="card dashboard-activity-card"><div class="card-head-inline"><div><h2>Последняя активность</h2><p class="muted">Что происходило с задачами отдела.</p></div><a class="btn secondary" href="{% url 'activity_feed' %}">Вся активность</a></div><div class="activity-feed">{% for event in activity %}<article class="activity-item activity-{{ event.kind }}"><div class="activity-icon"></div><div><div><strong>{% if event.actor %}{{ event.actor.get_full_name|default:event.actor.username }}{% else %}Система{% endif %}</strong> · <a href="{% url 'task_detail' event.task.pk %}">#{{ event.task.pk }} {{ event.task.title }}</a></div><div>{{ event.message }}</div><div class="muted">{{ event.created_at|date:"d.m.Y H:i" }}</div></div></article>{% empty %}<div class="empty">Активности пока нет.</div>{% endfor %}</div></section>
+{% endblock %}

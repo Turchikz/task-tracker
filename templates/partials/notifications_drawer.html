@@ -1,0 +1,15 @@
+<div class="notification-drawer-backdrop" data-notice-backdrop hidden></div>
+<aside class="notification-drawer" id="notification-drawer" aria-label="Последние уведомления" aria-modal="true" role="dialog" aria-hidden="true" hidden>
+  <header class="notification-drawer-head"><div><h2>Уведомления</h2><p class="muted">Последние события по вашим задачам</p></div><button class="drawer-close" type="button" data-notice-close aria-label="Закрыть">×</button></header>
+  <div class="notification-drawer-body">
+    {% for notice in recent_notifications %}
+      <div class="drawer-notice{% if not notice.is_read %} drawer-notice-unread{% endif %}">
+        <a href="{% url 'task_detail' notice.task_id %}"><strong>#{{ notice.task_id }}</strong> {{ notice.message }}</a>
+        <div class="drawer-notice-meta"><time>{{ notice.created_at|date:'d.m.Y H:i' }}</time>
+          {% if not notice.is_read %}<form method="post" action="{% url 'notification_read' notice.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit">Отметить прочитанным</button></form>{% endif %}
+        </div>
+      </div>
+    {% empty %}<div class="empty">Новых событий нет.</div>{% endfor %}
+  </div>
+  <footer><a class="btn secondary" href="{% url 'notifications' %}">Все уведомления →</a></footer>
+</aside>

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Аналитика{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Аналитика</h1><p class="muted">Операционные показатели без рейтинга сотрудников.</p></div></div>
+<div class="report-export"><a class="btn primary" href="{% url 'analytics_export' %}?from={{ date_from|date:'Y-m-d' }}&to={{ date_to|date:'Y-m-d' }}">Скачать отчёт Excel (.xlsx)</a><span class="muted">Обзор, показатели сотрудников, задачи за период и текущая загрузка</span></div>
+<form method="get" class="filters analytics-filter"><label>С <input type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" data-auto-submit></label><label>По <input type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" data-auto-submit></label></form>
+
+<div class="stats analytics-stats">
+  <div class="stat"><span>Создано</span><strong>{{ analytics.created }}</strong></div>
+  <div class="stat"><span>Выполнено</span><strong>{{ analytics.completed }}</strong></div>
+  <div class="stat"><span>В срок</span><strong>{% if analytics.on_time_rate != None %}{{ analytics.on_time_rate }}%{% else %}—{% endif %}</strong></div>
+  <div class="stat"><span>С опозданием</span><strong>{{ analytics.late }}</strong></div>
+  <div class="stat"><span>Возвратов</span><strong>{{ analytics.revisions }}</strong></div>
+  <div class="stat"><span>Просрочено сейчас</span><strong>{{ analytics.current_overdue }}</strong></div>
+</div>
+<div class="card analytics-summary"><span class="muted">Средний цикл от начала работы до окончательного выполнения</span><strong class="big-metric">{% if analytics.avg_cycle_hours != None %}{{ analytics.avg_cycle_hours }} ч{% else %}—{% endif %}</strong></div>
+
+<section><h2>По сотрудникам</h2><div class="table-wrap"><table class="analytics-table"><thead><tr><th>Сотрудник</th><th>Выполнено</th><th>В срок</th><th>Доработки</th><th>Средний цикл</th></tr></thead><tbody>{% for row in analytics.employees %}<tr><td><span class="employee-inline"><span class="avatar-initials">{{ row.user.first_name|default:row.user.username|slice:":1" }}{{ row.user.last_name|slice:":1" }}</span>{{ row.user.get_full_name|default:row.user.username }}</span></td><td>{{ row.completed }}</td><td>{% if row.on_time_rate != None %}<div class="metric-progress"><span style="width:{{ row.on_time_rate }}%"></span></div><strong>{{ row.on_time_rate }}%</strong>{% else %}—{% endif %}</td><td>{{ row.revisions }}</td><td>{% if row.avg_cycle_hours != None %}{{ row.avg_cycle_hours }} ч{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="5">Нет сотрудников.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

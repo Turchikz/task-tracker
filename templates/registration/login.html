@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Вход — Task Tracker{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}?v=4">
+{% endblock %}
+{% block content %}
+<div class="employee-login-page">
+  <section class="employee-login-card">
+    <div class="employee-login-heading">
+      <div class="employee-login-logo rat-login-logo" aria-hidden="true"><img src="{% static 'img/rat-brand.png' %}" alt=""></div>
+      <div>
+        <h1>Вход в RaTracker</h1>
+        <p>Выберите себя из списка и введите пароль.</p>
+      </div>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="employee-login-error" role="alert">{{ form.non_field_errors.0 }}</div>
+    {% endif %}
+
+    <form method="post" class="employee-login-form" novalidate>
+      {% csrf_token %}
+      {{ form.username }}
+
+      <div class="employee-login-field">
+        <label for="{{ form.employee.id_for_label }}">Фамилия и имя</label>
+        <div class="employee-select-wrap">
+          {{ form.employee }}
+          <span class="employee-select-arrow" aria-hidden="true"></span>
+        </div>
+        {% if form.employee.errors %}
+          <div class="employee-login-field-error">{{ form.employee.errors.0 }}</div>
+        {% endif %}
+        <div class="employee-login-help">
+          Можно начать печатать фамилию или имя — браузер быстро найдёт совпадение.
+        </div>
+      </div>
+
+      <div class="employee-login-field">
+        <label for="{{ form.password.id_for_label }}">Пароль</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <div class="employee-login-field-error">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button class="btn primary employee-login-submit" type="submit">Войти</button>
+    </form>
+  </section>
+</div>
+
+<script>
+(() => {
+  const employee = document.getElementById("id_employee");
+  const password = document.getElementById("id_password");
+
+  if (!employee || !password) return;
+
+  employee.focus();
+
+  employee.addEventListener("change", () => {
+    if (employee.value) {
+      window.requestAnimationFrame(() => password.focus());
+    }
+  });
+
+  employee.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && employee.value) {
+      event.preventDefault();
+      password.focus();
+    }
+  });
+})();
+</script>
+{% endblock %}

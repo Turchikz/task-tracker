@@ -1,0 +1,19 @@
+/* v0.8.0 semantic design tokens. Legacy variables are mapped in theme.css. */
+:root {
+  --ui-space-1:4px; --ui-space-2:8px; --ui-space-3:12px;
+  --ui-space-4:16px; --ui-space-5:20px; --ui-space-6:24px;
+  --ui-radius-sm:7px; --ui-radius-md:11px; --ui-radius-lg:15px;
+  --ui-elevation:0 9px 28px rgba(15,23,42,.12);
+  --ui-focus:#60a5fa; --ui-touch:44px; --ui-readable:1120px;
+  --ui-duration:150ms;
+}
+* { box-sizing:border-box }
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible {
+  outline:3px solid var(--ui-focus)!important;
+  outline-offset:3px!important;
+}
+:where(button,select,summary) { cursor:pointer }
+:where(button,a,select) { -webkit-tap-highlight-color:transparent }
+@media(prefers-reduced-motion:reduce) {
+  *, *::before, *::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important }
+}

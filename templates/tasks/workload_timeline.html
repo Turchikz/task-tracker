@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Загрузка сотрудников{% endblock %}
+{% block content %}
+<div class="workload-page workload-clean">
+  <div class="page-head workload-clean-head">
+    <div>
+      <h1>Загрузка сотрудников</h1>
+      <p class="muted">Чем выше сотрудник в списке, тем меньше его текущая нагрузка. Периоды отсутствия показаны отдельной строкой под сотрудником.</p>
+    </div>
+    <a class="btn primary" href="{% url 'task_create' %}">+ Новая задача</a>
+  </div>
+
+  <div class="workload-period-switch" role="group" aria-label="Масштаб плана">
+    <a class="btn secondary{% if period == 'month' %} is-selected{% endif %}" href="?scope={{ scope }}&year={{ year }}&month={{ month }}&period=month">Месяц</a>
+    <a class="btn secondary{% if period == 'two_weeks' %} is-selected{% endif %}" href="?scope={{ scope }}&year={{ year }}&month={{ month }}&period=two_weeks&day={{ start_day }}">2 недели</a>
+    <a class="btn secondary{% if period == 'week' %} is-selected{% endif %}" href="?scope={{ scope }}&year={{ year }}&month={{ month }}&period=week&day={{ start_day }}">Неделя</a>
+  </div>
+  <div class="workload-clean-toolbar">
+    <form method="get" class="filters workload-clean-filter">
+      <input type="hidden" name="year" value="{{ year }}">
+      <input type="hidden" name="month" value="{{ month }}"><input type="hidden" name="period" value="{{ period }}">
+      <label for="scope"><strong>Задачи</strong></label>
+      <select id="scope" name="scope" onchange="this.form.submit()">
+        <option value="current" {% if scope == 'current' %}selected{% endif %}>Только текущие</option>
+        <option value="all" {% if scope == 'all' %}selected{% endif %}>Все задачи</option>
+      </select>
+    </form>
+
+    <div class="timeline-toolbar workload-clean-month">
+      <a class="btn secondary" href="?{{ prev_query }}">←</a>
+      <div class="timeline-month">
+        <strong>{{ month_name }} {{ year }}</strong>
+        {% if year != today.year or month != today.month %}
+          <a href="{% url 'workload_timeline' %}?scope={{ scope }}&period={{ period }}">Текущий месяц</a>
+        {% endif %}
+      </div>
+      <a class="btn secondary" href="?{{ next_query }}">→</a>
+    </div>
+
+    <div class="workload-clean-legend"><span><i class="legend-day load-low"></i> Низкая загрузка</span><span><i class="legend-day load-moderate"></i> Умеренная</span><span><i class="legend-day load-high"></i> Высокая</span>
+      <span><i class="legend-day weekend-day"></i> Выходной</span>
+      <span><i class="legend-day holiday-day"></i> Праздник</span>
+      <span><i class="legend-day working-override-day"></i> Рабочий выходной</span>
+      <span><i class="legend-day absence-day"></i> Отсутствие</span>
+    </div>
+  </div>
+
+  <div class="workload-timeline-wrap workload-clean-wrap">
+    <table class="workload-timeline workload-clean-table">
+      <colgroup>
+        <col class="timeline-rank-col">
+        <col class="timeline-employee-col">
+        <col class="timeline-score-col">
+        {% for day in days %}
+        <col class="timeline-date-col{% if day.is_holiday %} holiday{% elif day.is_weekend %} weekend{% elif day.is_working_override %} working-override{% endif %}{% if day.is_today %} today{% endif %}">
+        {% endfor %}
+      </colgroup>
+
+      <thead>
+        <tr>
+          <th class="timeline-fixed timeline-rank-col">#</th>
+          <th class="timeline-fixed timeline-employee-col">Сотрудник</th>
+          <th class="timeline-fixed timeline-score-col" title="Чем меньше балл, тем меньше текущая нагрузка">Балл</th>
+          {% for day in days %}
+          <th class="timeline-day-head{% if day.is_holiday %} holiday{% elif day.is_weekend %} weekend{% elif day.is_working_override %} working-override{% endif %}{% if day.is_today %} today{% endif %}"
+              title="{{ day.date|date:'d.m.Y' }}{% if day.holiday_name %} — {{ day.holiday_name }}{% endif %}">
+            <span>{{ day.day|stringformat:"02d" }}</span>
+            <small>{{ day.weekday }}</small>
+            {% if day.is_holiday %}<i class="holiday-dot"></i>{% elif day.is_working_override %}<i class="working-dot"></i>{% endif %}
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for row in rows %}
+          {% if row.has_absences %}
+          <tr class="employee-absence-row employee-start">
+            <td class="timeline-fixed timeline-rank-col rank-number" rowspan="{{ row.row_span }}">{{ forloop.counter }}</td>
+            <td class="timeline-fixed timeline-employee-col" rowspan="{{ row.row_span }}">
+              <strong><a class="employee-link" href="{% url 'task_list' %}?assigned={{ row.workload.user.pk }}">{{ row.workload.user.get_full_name|default:row.workload.user.username }}</a></strong>
+              <div class="timeline-employee-meta">{{ row.workload.active_count }} активных · {{ row.workload.due_soon_count }} до 3 дней · {{ row.workload.overdue_count }} просрочено{% if row.no_due_count %} · {{ row.no_due_count }} без срока{% endif %}</div>
+              {% if row.workload.absence %}<div class="workload-current-absence">Сейчас отсутствует</div>{% endif %}
+            </td>
+            <td class="timeline-fixed timeline-score-col" rowspan="{{ row.row_span }}"><span class="load-indicator load-{{ row.workload.load_level }}">{{ row.workload.score }}</span></td>
+
+            {% for cell in row.absence_cells %}
+              {% if cell.kind == "absence" %}
+              <td class="timeline-absence-cell" colspan="{{ cell.colspan }}">
+                <div class="timeline-absence-bar"
+                     title="{{ cell.absence.start_date|date:'d.m.Y' }} — {{ cell.absence.end_date|date:'d.m.Y' }}{% if cell.absence.reason %} · {{ cell.absence.reason }}{% endif %}">
+                  {% if cell.absence.reason %}{{ cell.absence.reason }}{% else %}Отсутствие{% endif %}
+                  <span>{{ cell.absence.start_date|date:"d.m" }}–{{ cell.absence.end_date|date:"d.m" }}</span>
+                </div>
+              </td>
+              {% else %}
+              <td class="timeline-empty absence-empty" colspan="{{ cell.colspan }}"></td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endif %}
+
+          {% for lane in row.lanes %}
+          <tr class="employee-lane{% if forloop.first and not row.has_absences %} employee-start{% endif %}">
+            {% if forloop.first and not row.has_absences %}
+            <td class="timeline-fixed timeline-rank-col rank-number" rowspan="{{ row.row_span }}">{{ forloop.parentloop.counter }}</td>
+            <td class="timeline-fixed timeline-employee-col" rowspan="{{ row.row_span }}">
+              <strong><a class="employee-link" href="{% url 'task_list' %}?assigned={{ row.workload.user.pk }}">{{ row.workload.user.get_full_name|default:row.workload.user.username }}</a></strong>
+              <div class="timeline-employee-meta">{{ row.workload.active_count }} активных · {{ row.workload.due_soon_count }} до 3 дней · {{ row.workload.overdue_count }} просрочено{% if row.no_due_count %} · {{ row.no_due_count }} без срока{% endif %}</div>
+              {% if row.workload.absence %}<div class="workload-current-absence">Сейчас отсутствует</div>{% endif %}
+            </td>
+            <td class="timeline-fixed timeline-score-col" rowspan="{{ row.row_span }}"><span class="load-indicator load-{{ row.workload.load_level }}">{{ row.workload.score }}</span></td>
+            {% endif %}
+
+            {% for cell in lane %}
+              {% if cell.kind == "task" %}
+              <td class="timeline-task-cell" colspan="{{ cell.colspan }}">
+                <a class="timeline-bar priority-{{ cell.task.priority }} status-{{ cell.task.status }}{% if cell.task.deadline_state == 'overdue' %} is-overdue{% endif %}{% if cell.task.status == 'done' or cell.task.status == 'cancelled' %} is-history{% endif %}"
+                   href="{% url 'task_detail' cell.task.pk %}"
+                   data-workload-tooltip="{{ cell.task.title }} · {{ cell.task.get_status_display }} · {{ cell.task.get_priority_display }} · {{ cell.task.team_names }} · срок {{ cell.task.due_date|date:'d.m.Y' }}" title="{{ cell.task.title }} · {{ cell.task.get_status_display }} · срок {{ cell.task.due_date|date:'d.m.Y' }}">
+                  <span class="timeline-bar-title" data-timeline-title>{{ cell.task.title }}</span>
+                </a>
+              </td>
+              {% else %}
+              <td class="timeline-empty" colspan="{{ cell.colspan }}"></td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        {% empty %}
+        <tr><td colspan="{{ days|length|add:'3' }}" class="empty">Добавьте активных пользователей в группу Employees.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="muted timeline-note">Белый — рабочий день, серый — выходной, оранжевый — праздник, зелёный — рабочий выходной. Оранжевая полоса показывает точный период отсутствия сотрудника.</p>
+</div>
+{% endblock %}

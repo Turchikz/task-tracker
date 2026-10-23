@@ -1,0 +1,100 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Django system check
+        run: python manage.py check --settings=config.settings_test
+
+      - name: Check migrations
+        run: python manage.py makemigrations --check --dry-run --settings=config.settings_test
+
+      - name: Run tests
+        run: pytest
+
+  deploy:
+    name: Deploy to Raspberry Pi
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, Linux, ARM64, task-tracker]
+    timeout-minutes: 30
+    concurrency:
+      group: task-tracker-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@v4
+
+      - name: Load production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          CONFIG_FILE="$HOME/projects/.config/task-tracker/.env"
+          test -f "$CONFIG_FILE" || {
+            echo "Production env file not found: $CONFIG_FILE" >&2
+            exit 1
+          }
+          cp "$CONFIG_FILE" .env
+          chmod 600 .env
+          APP_PORT="$(sed -n 's/^APP_PORT=//p' .env | tail -n1)"
+          APP_PORT="${APP_PORT:-8081}"
+          echo "APP_PORT=$APP_PORT" >> "$GITHUB_ENV"
+
+      - name: Portable host backup before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          export HOST_BACKUP_DIR="$HOME/projects/backups/task-tracker"
+          export BACKUP_KEEP=20
+          ./scripts/backup_host.sh
+
+      - name: Build and deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose up -d --build --remove-orphans
+
+      - name: Verify deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:${APP_PORT}/health/ >/dev/null; then
+              echo "Task Tracker is healthy."
+              docker compose ps
+              exit 0
+            fi
+            echo "Waiting for Task Tracker... ($attempt/30)"
+            sleep 2
+          done
+
+          echo "Deployment health check failed." >&2
+          docker compose ps >&2
+          docker compose logs --tail=100 web nginx >&2
+          exit 1

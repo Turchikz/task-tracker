@@ -1,0 +1,8 @@
+<section class="card weekly-heatmap-card" aria-label="Карта нагрузки сотрудников">
+  <div class="section-heading"><div><h2>Карта загрузки · ближайшие 7 дней</h2><p class="muted">Цвет показывает суммарные условные баллы задач в каждый день. Это не рабочие часы и не оценка сотрудника.</p></div><a class="btn secondary" href="{% url 'workload_timeline' %}">Подробный план →</a></div>
+  <div class="weekly-heatmap-wrap"><table class="weekly-heatmap"><thead><tr><th>Сотрудник</th>{% for day in weekly_heatmap.days %}<th>{{ day|date:'d.m' }}<small>{{ day|date:'D' }}</small></th>{% endfor %}</tr></thead>
+  <tbody>{% for row in weekly_heatmap.rows %}<tr><th><a href="{% url 'task_list' %}?assigned={{ row.user.pk }}">{{ row.user.get_full_name|default:row.user.username }}</a></th>
+    {% for cell in row.cells %}<td><span class="heatmap-tile heatmap-{{ cell.level }}" title="{{ cell.date|date:'d.m.Y' }}: {% if cell.absent %}Отсутствует{% else %}{{ cell.count }} задач; {{ cell.score }} баллов{% endif %}" aria-label="{% if cell.absent %}Отсутствует{% else %}{{ cell.score }} баллов{% endif %}">{% if cell.absent %}—{% else %}{{ cell.score }}{% endif %}</span></td>{% endfor %}
+  </tr>{% empty %}<tr><td colspan="8" class="empty">Сотрудников пока нет.</td></tr>{% endfor %}</tbody></table></div>
+  <div class="heatmap-legend"><span><i class="heatmap-tile heatmap-empty"></i> Нет нагрузки</span><span><i class="heatmap-tile heatmap-low"></i> 1–7</span><span><i class="heatmap-tile heatmap-moderate"></i> 8–19</span><span><i class="heatmap-tile heatmap-high"></i> 20+</span><span><i class="heatmap-tile heatmap-absent"></i> Отсутствие</span></div>
+</section>

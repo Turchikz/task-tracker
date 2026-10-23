@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Канбан{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Канбан</h1><p class="muted">Текущие задачи по этапам. Статус меняется кнопками на карточках, без drag-and-drop.</p></div>
+  {% if is_manager %}<a class="btn primary" href="{% url 'task_create' %}">+ Новая задача</a>{% endif %}
+</div>
+
+<form method="get" class="filters auto-filter kanban-filter">
+  <select name="scope" onchange="this.form.submit()"><option value="current" {% if scope == 'current' %}selected{% endif %}>Только текущие</option><option value="all" {% if scope == 'all' %}selected{% endif %}>Все, включая архив</option></select>
+  <select name="priority" onchange="this.form.submit()"><option value="">Все приоритеты</option>{% for value,label in priorities %}<option value="{{ value }}" {% if filters.priority == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+  {% if is_manager %}<select name="assigned" onchange="this.form.submit()"><option value="">Все исполнители</option>{% for employee in employees %}<option value="{{ employee.pk }}" {% if filters.assigned == employee.pk|stringformat:'s' %}selected{% endif %}>{{ employee.get_full_name|default:employee.username }}</option>{% endfor %}</select>{% endif %}
+</form>
+
+<div class="kanban-ux-tools"><label class="check"><input type="checkbox" data-hide-empty-kanban> Скрыть пустые колонки</label></div>
+<div class="kanban-board" data-kanban-board>
+{% for column in columns %}
+<section class="kanban-column column-{{ column.value }}{% if not column.tasks %} is-empty-column{% endif %}">
+  <header class="kanban-column-head"><h2>{{ column.label }}</h2><span class="count-pill">{{ column.tasks|length }}</span></header>
+  <div class="kanban-cards">
+    {% for task in column.tasks %}
+    <article class="kanban-card priority-edge-{{ task.priority }}">
+      <a class="kanban-card-link" href="{% url 'task_detail' task.pk %}" title="{{ task.title }}">
+        <div class="kanban-card-badges">{% include "tasks/_status_badge.html" with task=task %}{% include "tasks/_priority_badge.html" with task=task %}</div>
+        <h3><span class="task-id muted">#{{ task.pk }}</span> {{ task.title }}</h3>
+        <div class="muted employee-inline">{% include "partials/team_avatars.html" with task=task %}{% if is_manager %} <span class="team-primary-label">{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</span>{% endif %}</div>
+        {% if is_manager %}<div class="muted kanban-manager">Ответственный: {% if task.responsible_manager %}{{ task.responsible_manager.get_full_name|default:task.responsible_manager.username }}{% else %}{{ task.created_by.get_full_name|default:task.created_by.username }}{% endif %}</div>{% endif %}
+        <div class="kanban-card-meta"><span>{{ task.get_effort_display }}</span><span class="deadline {{ task.deadline_state }}">{{ task.deadline_label }}</span></div>
+      </a>
+
+      <div class="kanban-card-actions">
+        {% if is_manager %}
+          {% if user.is_superuser or task.responsible_manager_id == user.id or not task.responsible_manager_id and task.created_by_id == user.id %}
+            {% if task.status == 'review' %}
+              <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="accept"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini success" type="submit">Принять</button></form>
+            {% elif task.status == 'new' or task.status == 'revision' %}
+              <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini primary" type="submit">В работу</button></form>
+              <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="done"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini" type="submit">Выполнено</button></form>
+            {% elif task.status == 'in_progress' %}
+              <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="done"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini" type="submit">Выполнено</button></form>
+            {% endif %}
+          {% endif %}
+        {% else %}
+          {% if task.status == 'new' or task.status == 'revision' %}<form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini primary" type="submit">Начать</button></form>{% elif task.status == 'in_progress' %}<form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="submit"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini primary" type="submit">На проверку</button></form>{% endif %}
+        {% endif %}
+      </div>
+    </article>
+    {% empty %}<div class="kanban-empty">Нет задач</div>{% endfor %}
+  </div>
+</section>
+{% endfor %}
+</div>
+{% endblock %}

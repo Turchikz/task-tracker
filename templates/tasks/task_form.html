@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+{% if templates %}<form method="get" class="template-picker"><label>Заполнить из шаблона <select name="template" onchange="this.form.submit()"><option value="">Выберите шаблон</option>{% for item in templates %}<option value="{{ item.pk }}" {% if selected_template.pk == item.pk %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></label><noscript><button class="btn" type="submit">Применить</button></noscript></form>{% endif %}
+<form method="post" class="form-card task-edit-form">{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="task-form-grid">{% for field in form %}<div class="field field-{{ field.name }}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<div class="error">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
+  {% if workload_ranking %}
+  <div class="workload-panel">
+    <h2>Загрузка сотрудников</h2>
+    <p class="muted">Цветовые уровни: до 7 баллов — низкая, 8–19 — умеренная, 20 и более — высокая; отсутствие отмечается отдельно.</p>
+    <p class="muted">Сотрудники уже отсортированы от менее загруженного к более загруженному. Балл — относительный показатель, не часы. Общая задача учитывается у каждого назначенного сотрудника.</p>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>Сотрудник</th><th>Балл</th><th>Активных</th><th>Срочных</th><th>До 3 дней</th><th>Просрочено</th></tr></thead><tbody>
+    {% for row in workload_ranking %}<tr><td>{{ forloop.counter }}</td><td>{{ row.user.get_full_name|default:row.user.username }}</td><td><span class="load-indicator load-{{ row.load_level }}" title="{{ row.load_label }} загрузка">{{ row.score }}</span></td><td>{{ row.active_count }}</td><td>{{ row.urgent_count }}</td><td>{{ row.due_soon_count }}</td><td>{{ row.overdue_count }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+  {% endif %}
+  <div class="actions"><button class="btn primary" type="submit">Сохранить</button>{% if task %}<a class="btn secondary" href="{% url 'task_detail' task.pk %}">Отмена</a>{% else %}<a class="btn secondary" href="{% url 'task_list' %}">Отмена</a>{% endif %}</div>
+</form>
+{% endblock %}

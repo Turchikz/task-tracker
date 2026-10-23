@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Мои задачи на сегодня{% endblock %}
+{% block content %}
+<h1>Мои задачи на сегодня</h1><p class="muted">{{ today|date:"d.m.Y" }}</p>
+{% if review_tasks %}<section><h2>На проверке <span class="count">{{ review_tasks|length }}</span></h2>{% include "tasks/_task_cards.html" with tasks=review_tasks %}</section>{% endif %}
+<section><h2>Просрочено <span class="count">{{ overdue|length }}</span></h2>{% include "tasks/_task_cards.html" with tasks=overdue %}</section>
+<section><h2>Сегодня <span class="count">{{ today_tasks|length }}</span></h2>{% include "tasks/_task_cards.html" with tasks=today_tasks %}</section>
+<section><h2>Ближайшие 7 дней <span class="count">{{ upcoming|length }}</span></h2>{% include "tasks/_task_cards.html" with tasks=upcoming %}</section>
+{% if no_date %}<section><h2>Без срока <span class="count">{{ no_date|length }}</span></h2>{% include "tasks/_task_cards.html" with tasks=no_date %}</section>{% endif %}
+{% endblock %}

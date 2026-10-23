@@ -1,0 +1,119 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Task Tracker{% endblock %}</title>
+
+  <script>
+    (() => {
+      try {
+        const saved = localStorage.getItem("task-tracker-theme");
+        const theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.dataset.theme = theme;
+      } catch (_) {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/task_review.css' %}">
+  <link rel="stylesheet" href="{% static 'css/brand.css' %}?v=1">
+
+  {% block extra_css %}{% endblock %}
+  <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=080">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}?v=081">
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}?v=080">
+  <script defer src="{% static 'js/ux.js' %}?v=080"></script>
+  <link rel="stylesheet" href="{% static 'css/microinteractions.css' %}?v=082">
+  <link rel="stylesheet" href="{% static 'css/team_tasks.css' %}?v=083">
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+
+  <script defer src="{% static 'js/app.js' %}"></script>
+  <script defer src="{% static 'js/theme_toggle.js' %}?v=082"></script>
+  <script defer src="{% static 'js/assignees.js' %}?v=090"></script>
+  <script defer src="{% static 'js/notification_drawer.js' %}?v=090"></script>
+  <link rel="stylesheet" href="{% static 'css/v090.css' %}?v=090">
+  <link rel="stylesheet" href="{% static 'css/soundscape.css' %}?v=091">
+  <script defer src="{% static 'js/soundscape.js' %}?v=091"></script>
+</head>
+<body{% if user.is_authenticated %} data-sound-user="{{ user.pk }}" data-sound-feed="{% url 'sound_notifications_feed' %}" data-mouse-image="{% static 'img/rat-brand.png' %}"{% endif %}>
+<header class="topbar" data-site-header>
+  <a class="brand" href="{% url 'home' %}" aria-label="RaTracker — главная">
+    <img class="brand-rat" src="{% static 'img/rat-brand.png' %}" alt="">
+    <span class="brand-title">RaTracker</span>
+  </a>
+  {% if user.is_authenticated %}
+  <nav class="primary-nav" aria-label="Основная навигация">
+    {% if is_manager %}
+      <a href="{% url 'manager_dashboard' %}" class="{% if request.resolver_match.url_name == 'manager_dashboard' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'manager_dashboard' %}aria-current="page"{% endif %}>Дашборд</a>
+    {% else %}
+      <a href="{% url 'my_today' %}" class="{% if request.resolver_match.url_name == 'my_today' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'my_today' %}aria-current="page"{% endif %}>Сегодня</a>
+    {% endif %}
+    <a href="{% url 'task_list' %}" class="{% if request.resolver_match.url_name == 'task_list' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'task_list' %}aria-current="page"{% endif %}>Задачи</a>
+    <a href="{% url 'kanban' %}" class="{% if request.resolver_match.url_name == 'kanban' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'kanban' %}aria-current="page"{% endif %}>Канбан</a>
+    <a href="{% url 'calendar' %}" class="{% if request.resolver_match.url_name == 'calendar' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'calendar' %}aria-current="page"{% endif %}>Календарь</a>
+    {% if is_manager %}<a href="{% url 'workload_timeline' %}" class="{% if request.resolver_match.url_name == 'workload_timeline' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'workload_timeline' %}aria-current="page"{% endif %}>Загрузка</a>{% endif %}
+    <details class="nav-dropdown" data-menu>
+      <summary class="nav-menu-trigger{% if request.resolver_match.url_name == 'analytics' or request.resolver_match.url_name == 'activity_feed' or request.resolver_match.url_name == 'review_queue' or request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'template_list' %} is-current{% endif %}">Ещё</summary>
+      <div class="dropdown-panel" role="group" aria-label="Дополнительные разделы">
+        {% if is_manager %}
+          <a href="{% url 'review_queue' %}">Проверка{% if pending_review_count %} <span class="badge">{{ pending_review_count }}</span>{% endif %}</a>
+          <a href="{% url 'analytics' %}">Аналитика</a>
+          <a href="{% url 'activity_feed' %}">Активность</a>
+          <a href="{% url 'absences' %}">Отсутствия</a>
+          <a href="{% url 'template_list' %}">Шаблоны</a>
+        {% else %}
+          <a href="{% url 'notifications' %}">Уведомления</a>
+        {% endif %}
+      </div>
+    </details>
+  </nav>
+  <div class="topbar-tools">
+    <form method="get" action="{% url 'global_search' %}" class="global-search-form" role="search">
+      <input type="search" name="q" value="{% if request.resolver_match.url_name == 'global_search' %}{{ request.GET.q|default:'' }}{% endif %}" placeholder="Поиск · Ctrl+K" aria-label="Поиск задач" data-global-search>
+      <button type="submit" aria-label="Искать">⌕</button>
+    </form>
+    <button class="notifications-shortcut{% if request.resolver_match.url_name == 'notifications' %} is-current{% endif %}" type="button" data-notice-open aria-controls="notification-drawer" aria-expanded="false" aria-label="Последние уведомления{% if unread_notifications %}: {{ unread_notifications }} непрочитанных{% endif %}" title="Последние уведомления"><span aria-hidden="true">🔔</span>{% if unread_notifications %}<span class="badge{% if action_notifications_count %} action-badge{% endif %}">{{ unread_notifications }}</span>{% endif %}</button>
+    {% if is_manager %}<a class="btn primary new-task-shortcut" href="{% url 'task_create' %}">+ Новая задача</a>{% endif %}
+    {% include 'partials/theme_bulb.html' %}
+    <details class="nav-dropdown profile-menu" data-menu>
+      <summary class="profile-trigger"><span class="profile-avatar">{{ user.first_name|default:user.username|slice:':1' }}</span><span class="profile-label">{{ user.get_full_name|default:user.username }}</span></summary>
+      <div class="dropdown-panel dropdown-panel-end" role="group" aria-label="Профиль">
+        <span class="dropdown-caption">{{ user.get_full_name|default:user.username }}</span>
+        <a href="{% url 'password_change' %}">Сменить пароль</a>
+        {% if user.is_staff %}<a href="{% url 'admin:index' %}">Администрирование</a>{% endif %}
+        {% if user.is_superuser %}<a href="{% url 'backup_monitor' %}">Резервные копии</a>{% endif %}
+        <button type="button" class="dropdown-action" data-theme-menu-toggle>Переключить тему</button>
+        <div class="sound-settings-wrapper"><button type="button" class="dropdown-action" data-sound-open aria-expanded="false">Звуки и пасхалки</button>{% include 'partials/sound_settings.html' %}</div>
+        <form method="post" action="{% url 'logout' %}" class="profile-logout-form">
+          {% csrf_token %}
+          <button class="logout-action" type="submit" title="Выйти из RaTracker">
+            <span class="logout-action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                <path class="logout-door" d="M10 4.5H6.5A2.5 2.5 0 0 0 4 7v10a2.5 2.5 0 0 0 2.5 2.5H10" />
+                <path class="logout-arrow" d="M10 12h10m-4-4 4 4-4 4" />
+              </svg>
+            </span>
+            <span class="logout-action-label">Выйти</span>
+          </button>
+        </form>
+      </div>
+    </details>
+  </div>
+  {% else %}
+    <div class="guest-theme-control">{% include 'partials/theme_bulb.html' %}</div>
+  {% endif %}
+</header>
+{% if user.is_authenticated %}{% include 'partials/notifications_drawer.html' %}{% endif %}
+
+<main class="container {% block container_class %}{% endblock %}">
+  {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

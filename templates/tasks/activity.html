@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Активность{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Лента активности</h1><p class="muted">Последние изменения задач, комментарии и изображения.</p></div></div>
+<div class="activity-feed full-activity">{% for event in page_obj %}<article class="activity-item activity-{{ event.kind }}"><div class="activity-icon"></div><div><div><strong>{% if event.actor %}{{ event.actor.get_full_name|default:event.actor.username }}{% else %}Система{% endif %}</strong> · <a href="{% url 'task_detail' event.task.pk %}">#{{ event.task.pk }} {{ event.task.title }}</a></div><div>{{ event.message }}</div><div class="muted">{{ event.created_at|date:"d.m.Y H:i" }}</div></div></article>{% empty %}<div class="empty">Активности пока нет.</div>{% endfor %}</div>
+{% if page_obj.paginator.num_pages > 1 %}<div class="pagination">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">←</a>{% endif %}<span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">→</a>{% endif %}</div>{% endif %}
+{% endblock %}

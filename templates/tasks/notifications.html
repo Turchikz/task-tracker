@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Уведомления{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Уведомления</h1><p class="muted">Важные действия отделены от информационных событий.</p></div>{% if unread_notifications %}<form method="post" action="{% url 'notifications_read_all' %}">{% csrf_token %}<button class="btn secondary" type="submit">Прочитать все</button></form>{% endif %}</div>
+
+<div class="notification-view-options" role="group" aria-label="Фильтр уведомлений">
+  <button class="btn secondary is-selected" data-notify-filter="all" aria-pressed="true" type="button">Все</button>
+  <button class="btn secondary" data-notify-filter="unread" aria-pressed="false" type="button">Непрочитанные</button>
+</div>
+<section class="notification-section action-notifications">
+  <div class="section-heading"><div><h2>Требует действия</h2><p class="muted">Проверка результата, доработка или просроченная работа.</p></div><span class="count-pill">{{ action_notifications|length }}</span></div>
+  <div class="notifications">
+    {% for n in action_notifications %}
+      {% ifchanged n.display_day %}<div class="notification-date-heading">{% if n.display_day == today %}Сегодня{% elif n.display_day == yesterday %}Вчера{% else %}Ранее · {{ n.created_at|date:"j E Y" }}{% endif %}</div>{% endifchanged %}
+      <article data-notification class="notification notification-action {% if not n.is_read %}unread{% endif %}"><div><div class="notification-type">Требует действия</div><a href="{% url 'task_detail' n.task.pk %}"><strong>#{{ n.task.pk }}</strong> {{ n.message }}</a><div class="muted">{{ n.created_at|date:"d.m.Y H:i" }}</div></div><div class="notification-buttons"><a class="btn primary mini" href="{% url 'task_detail' n.task.pk %}">Открыть задачу</a>{% if not n.is_read %}<form method="post" action="{% url 'notification_read' n.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{% url 'notifications' %}"><button class="btn secondary mini" type="submit">Прочитано</button></form>{% endif %}</div></article>
+    {% empty %}<div class="empty">Нет уведомлений, требующих действия.</div>{% endfor %}
+  </div>
+</section>
+
+<section class="notification-section">
+  <div class="section-heading"><div><h2>Информация</h2><p class="muted">Назначения, изменения сроков, принятие и другие события.</p></div><span class="count-pill">{{ info_notifications|length }}</span></div>
+  <div class="notifications">
+    {% for n in info_notifications %}{% ifchanged n.display_day %}<div class="notification-date-heading">{% if n.display_day == today %}Сегодня{% elif n.display_day == yesterday %}Вчера{% else %}Ранее · {{ n.created_at|date:"j E Y" }}{% endif %}</div>{% endifchanged %}<article data-notification class="notification {% if not n.is_read %}unread{% endif %}"><div><a href="{% url 'task_detail' n.task.pk %}"><strong>#{{ n.task.pk }}</strong> {{ n.message }}</a><div class="muted">{{ n.created_at|date:"d.m.Y H:i" }}</div></div>{% if not n.is_read %}<form method="post" action="{% url 'notification_read' n.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{% url 'notifications' %}"><button class="btn secondary mini" type="submit">Прочитано</button></form>{% endif %}</article>{% empty %}<div class="empty">Информационных уведомлений нет.</div>{% endfor %}
+  </div>
+</section>
+{% endblock %}

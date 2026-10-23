@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Календарь{% endblock %}
+{% block content %}
+<div class="calendar-page-head">
+  <div class="calendar-head calendar-nav-head">
+    <a class="btn secondary" href="?{{ prev_query }}">←</a>
+    <div class="calendar-title-block">
+      <h1>{{ month_name }} {{ year }}</h1>
+      <p class="muted">Выходные и праздничные дни РТ выделены фоном.</p>
+    </div>
+    <a class="btn secondary" href="?{{ next_query }}">→</a>
+  </div>
+
+  <form method="get" class="filters auto-filter calendar-filters">
+    <input type="hidden" name="year" value="{{ year }}">
+    <input type="hidden" name="month" value="{{ month }}">
+    <select name="status" onchange="this.form.submit()"><option value="">Все статусы</option>{% for value,label in statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <select name="priority" onchange="this.form.submit()"><option value="">Все приоритеты</option>{% for value,label in priorities %}<option value="{{ value }}" {% if filters.priority == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    {% if is_manager %}<select name="assigned" onchange="this.form.submit()"><option value="">Все исполнители</option>{% for employee in employees %}<option value="{{ employee.pk }}" {% if filters.assigned == employee.pk|stringformat:'s' %}selected{% endif %}>{{ employee.get_full_name|default:employee.username }}</option>{% endfor %}</select>{% endif %}
+  </form>
+
+  <div class="calendar-day-legend" aria-label="Легенда производственного календаря">
+    <span><i class="calendar-legend-box calendar-legend-weekend"></i> Выходной</span>
+    <span><i class="calendar-legend-box calendar-legend-holiday"></i> Праздник / дополнительный выходной</span>
+    <span><i class="calendar-legend-box calendar-legend-working"></i> Рабочий выходной по переносу</span>
+    <span><i class="calendar-legend-box calendar-legend-today"></i> Сегодня</span>
+  </div>
+</div>
+
+<div class="calendar-display-switch" role="group" aria-label="Представление календаря">
+  <button class="btn secondary" type="button" data-calendar-mode="month" aria-pressed="true">Месяц</button>
+  <button class="btn secondary" type="button" data-calendar-mode="agenda" aria-pressed="false">Список</button>
+</div>
+<section class="calendar-agenda" data-calendar-agenda hidden aria-label="Список задач на месяц">
+  {% for week in weeks %}{% for day in week %}{% if day.in_month %}
+    <div class="agenda-day{% if day.date == today %} is-today{% endif %}">
+      <div class="agenda-date"><strong>{{ day.date|date:'j E, D' }}</strong>{% if day.is_holiday and day.holiday_name %}<small>{{ day.holiday_name }}</small>{% endif %}</div>
+      <div class="agenda-tasks">{% for task in day.tasks %}<a href="{% url 'task_detail' task.pk %}" class="agenda-task"><strong>{{ task.title }}</strong><span>{{ task.get_status_display }} · {{ task.get_priority_display }}</span></a>{% empty %}<span class="muted">Нет задач</span>{% endfor %}</div>
+    </div>
+  {% endif %}{% endfor %}{% endfor %}
+</section>
+<div class="calendar-wrap calendar-wrap-production">
+  <table class="calendar calendar-production">
+    <thead>
+      <tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th class="weekend-head">Сб</th><th class="weekend-head">Вс</th></tr>
+    </thead>
+    <tbody>
+      {% for week in weeks %}
+      <tr>
+        {% for day in week %}
+        <td
+          class="calendar-day{% if not day.in_month %} outside{% endif %}{% if day.is_holiday %} production-holiday{% elif day.is_weekend %} production-weekend{% elif day.is_working_override %} production-working-override{% endif %}{% if day.date == today %} current{% endif %}"
+          title="{{ day.date|date:'d.m.Y' }}{% if day.holiday_name %} — {{ day.holiday_name }}{% endif %}"
+        >
+          <div class="calendar-day-topline">
+            <span class="day-number">{{ day.date.day }}</span>
+            {% if day.is_holiday %}
+              <span class="calendar-day-badge holiday-badge">Праздник</span>
+            {% elif day.is_working_override %}
+              <span class="calendar-day-badge working-badge">Рабочий</span>
+            {% elif day.is_weekend %}
+              <span class="calendar-day-badge weekend-badge">Выходной</span>
+            {% endif %}
+          </div>
+          {% if day.is_holiday and day.holiday_name %}<div class="calendar-holiday-name">{{ day.holiday_name }}</div>{% endif %}
+          {% for task in day.tasks %}
+            <a class="calendar-task {{ task.deadline_state }}" href="{% url 'task_detail' task.pk %}" title="{{ task.get_priority_display }} / {{ task.team_names }}">{{ task.title }}</a>
+          {% endfor %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

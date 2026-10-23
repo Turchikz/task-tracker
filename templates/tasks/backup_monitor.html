@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Резервные копии{% endblock %}
+{% block content %}
+<nav class="breadcrumbs"><a href="{% url 'manager_dashboard' %}">Дашборд</a><span>→</span><span>Резервные копии</span></nav>
+<div class="page-head"><div><h1>Контроль резервных копий</h1><p class="muted">Состояние последнего backup, выполненного на хосте вне Docker.</p></div></div>
+<section class="card backup-monitor-card">
+  <div class="backup-status-heading"><span class="backup-status-dot status-{{ backup.state }}"></span><h2>{{ backup.label }}</h2></div>
+  {% if backup.completed_at %}
+  <dl class="facts-list">
+    <div><dt>Дата и время</dt><dd>{{ backup.completed_at|date:'d.m.Y H:i' }}</dd></div>
+    <div><dt>Архив</dt><dd><code>{{ backup.archive_name }}</code></dd></div>
+    <div><dt>Размер</dt><dd>{{ backup.size_megabytes }} МБ</dd></div>
+    <div><dt>Возраст</dt><dd>{{ backup.age_hours }} ч</dd></div>
+    <div><dt>PostgreSQL</dt><dd>Включена копия БД</dd></div>
+    <div><dt>Фото и media</dt><dd>{% if backup.media_included %}Включены{% else %}Не включены{% endif %}</dd></div>
+    <div><dt>SHA-256</dt><dd>{% if backup.sha256 %}<code class="checksum">{{ backup.sha256 }}</code>{% else %}Нет данных{% endif %}</dd></div>
+    <div><dt>Система</dt><dd>{{ backup.host_os }}</dd></div>
+  </dl>
+  {% else %}<p class="muted">Для мониторинга выполните первый backup через скрипт в <code>scripts/</code>. После этого сведения появятся автоматически.</p>{% endif %}
+</section>
+<p class="muted">Это контроль успешного создания архива и наличия SHA-256, но не тест восстановления. Рекомендуется периодически проверять восстановление на тестовом окружении.</p>
+{% endblock %}

@@ -1,0 +1,226 @@
+/* RaTracker v0.8.2 — refined lamp switch and logout affordance.
+   Inspired by Jh3y's draggable bulb and Uiverse's logout motion;
+   independent CSS/JS implementation, no external dependencies. */
+
+.topbar .theme-bulb-toggle {
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:48px;
+  min-width:48px;
+  height:50px;
+  padding:0;
+  margin:0;
+  border:1px solid transparent;
+  border-radius:10px;
+  background:transparent;
+  box-shadow:none;
+  color:inherit;
+  cursor:pointer;
+  flex-shrink:0;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:background-color .18s ease, border-color .18s ease;
+}
+.topbar .theme-bulb-toggle:hover {
+  background:rgba(255,255,255,.075);
+  border-color:rgba(255,255,255,.075);
+}
+.topbar .theme-bulb-toggle:focus-visible {
+  outline:3px solid var(--ui-focus,#60a5fa)!important;
+  outline-offset:2px!important;
+}
+.theme-bulb-scene {
+  position:relative;
+  display:block;
+  width:40px;
+  height:48px;
+  pointer-events:none;
+}
+.theme-bulb-wire {
+  position:absolute;
+  top:0;
+  left:19.5px;
+  width:1px;
+  height:7px;
+  background:#94a3b8;
+}
+.theme-bulb-halo {
+  position:absolute;
+  top:3px;
+  left:4px;
+  width:32px;
+  height:35px;
+  border-radius:50%;
+  background:#facc15;
+  filter:blur(9px);
+  opacity:.38;
+  transform:scale(1);
+  transition:opacity .25s ease, transform .28s ease;
+}
+.theme-bulb-art {
+  position:absolute;
+  top:3px;
+  left:5px;
+  width:30px;
+  height:35px;
+  overflow:visible;
+  transform-origin:50% 0;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.16));
+}
+.theme-bulb-glass {
+  stroke:#e8a327;
+  stroke-width:2.1;
+  fill:#fef3c7;
+  transition:fill .25s ease,stroke .25s ease;
+}
+.theme-bulb-filament {
+  stroke:#b45309;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+  transition:stroke .25s ease;
+}
+.theme-bulb-sheen {
+  stroke:rgba(255,255,255,.8);
+  stroke-width:2.4;
+  stroke-linecap:round;
+  fill:none;
+}
+.theme-bulb-base {fill:#64748b;stroke:#94a3b8;stroke-width:1.1}
+.theme-bulb-thread {fill:none;stroke:#cbd5e1;stroke-width:1.9;stroke-linecap:round}
+.theme-bulb-pull {
+  --cord-pull:0px;
+  position:absolute;
+  top:34px;
+  left:25px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  height:14px;
+  width:12px;
+  transform:translateY(var(--cord-pull));
+  transition:transform 260ms cubic-bezier(.2,1.4,.35,1);
+}
+.theme-bulb-toggle.is-dragging .theme-bulb-pull {transition:none}
+.theme-bulb-cord {
+  height:8px;
+  width:1.7px;
+  border-radius:1px;
+  background:#aab9cd;
+}
+.theme-bulb-grip {
+  display:block;
+  height:6px;
+  width:6px;
+  border-radius:50%;
+  background:#dce7f4;
+  border:1px solid #94a3b8;
+  box-shadow:0 1px 2px rgba(0,0,0,.18);
+}
+html[data-theme="dark"] .theme-bulb-halo {opacity:0;transform:scale(.55)}
+html[data-theme="dark"] .theme-bulb-glass {fill:#334155;stroke:#8191a8}
+html[data-theme="dark"] .theme-bulb-filament {stroke:#94a3b8}
+html[data-theme="dark"] .theme-bulb-sheen {stroke:rgba(255,255,255,.25)}
+.theme-bulb-toggle.is-pulling .theme-bulb-art {
+  animation:theme-bulb-sway 380ms ease-out;
+}
+.theme-bulb-toggle.is-pulling:not(.is-dragging) .theme-bulb-pull {
+  animation:theme-bulb-tug 380ms cubic-bezier(.2,.9,.2,1);
+}
+@keyframes theme-bulb-tug {
+  0%{transform:translateY(0)}
+  40%{transform:translateY(9px)}
+  72%{transform:translateY(-2px)}
+  100%{transform:translateY(0)}
+}
+@keyframes theme-bulb-sway {
+  0%,100%{transform:rotate(0deg)}
+  35%{transform:rotate(-8deg)}
+  67%{transform:rotate(4deg)}
+}
+.guest-theme-control {margin-left:auto;display:flex;align-items:center}
+
+/* The Uiverse-inspired exit animation stays INSIDE the profile menu:
+   no expanding layout, bright red flash, or accidental form submission. */
+.dropdown-panel .profile-logout-form {
+  margin:5px 0 0;
+  padding:6px 1px 1px;
+  border-top:1px solid var(--tt-border,#e5e7eb);
+}
+.dropdown-panel .logout-action {
+  width:100%;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:11px;
+  padding:6px 10px;
+  border:1px solid transparent;
+  border-radius:8px;
+  background:transparent;
+  color:var(--tt-text,#1f2937);
+  text-align:left;
+  font:inherit;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:background-color .2s ease,border-color .2s ease,color .2s ease;
+}
+.dropdown-panel .logout-action:hover,
+.dropdown-panel .logout-action:focus-visible {
+  background:rgba(225,29,72,.07);
+  border-color:rgba(225,29,72,.16);
+  color:#be123c;
+}
+.dropdown-panel .logout-action-icon {
+  width:29px;
+  height:29px;
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  border-radius:8px;
+  background:var(--tt-surface-3,#f1f5f9);
+  color:var(--tt-muted,#64748b);
+  transition:background-color .22s ease,color .22s ease, transform .22s ease;
+}
+.dropdown-panel .logout-action-icon svg {width:18px;height:18px;display:block}
+.dropdown-panel .logout-arrow {
+  transform-origin:center;
+  transition:transform .25s cubic-bezier(.2,.8,.2,1);
+}
+.dropdown-panel .logout-action-label {
+  transition:transform .22s cubic-bezier(.2,.8,.2,1);
+}
+.dropdown-panel .logout-action:hover .logout-action-icon,
+.dropdown-panel .logout-action:focus-visible .logout-action-icon {
+  background:rgba(225,29,72,.12);
+  color:#be123c;
+}
+.dropdown-panel .logout-action:hover .logout-arrow,
+.dropdown-panel .logout-action:focus-visible .logout-arrow {transform:translateX(2px)}
+.dropdown-panel .logout-action:hover .logout-action-label,
+.dropdown-panel .logout-action:focus-visible .logout-action-label {transform:translateX(2px)}
+html[data-theme="dark"] .dropdown-panel .logout-action:hover,
+html[data-theme="dark"] .dropdown-panel .logout-action:focus-visible {
+  background:rgba(251,113,133,.09);
+  border-color:rgba(251,113,133,.20);
+  color:#fda4af;
+}
+html[data-theme="dark"] .dropdown-panel .logout-action:hover .logout-action-icon,
+html[data-theme="dark"] .dropdown-panel .logout-action:focus-visible .logout-action-icon {
+  background:rgba(251,113,133,.14);
+  color:#fda4af;
+}
+@media(max-width:750px) {
+  .topbar .topbar-tools .theme-bulb-toggle {display:none!important}
+  .guest-theme-control .theme-bulb-toggle {display:inline-flex!important}
+}
+@media(prefers-reduced-motion:reduce) {
+  .theme-bulb-toggle.is-pulling .theme-bulb-art,
+  .theme-bulb-toggle.is-pulling .theme-bulb-pull {animation:none!important}
+}

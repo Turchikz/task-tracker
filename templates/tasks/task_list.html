@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Задачи{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Задачи</h1>
+    <p class="muted">Быстрые фильтры, персональные наборы и массовые действия.</p>
+  </div>
+  <div class="page-head-actions">
+    
+    {% if is_manager %}<a class="btn primary" href="{% url 'task_create' %}">+ Новая задача</a>{% endif %}
+  </div>
+</div>
+
+<div class="filter-chips" aria-label="Быстрые фильтры">
+  <a class="filter-chip {% if not filters.quick %}active{% endif %}" href="{% url 'task_list' %}">Все</a>
+  <a class="filter-chip {% if filters.quick == 'current' %}active{% endif %}" href="?quick=current">Текущие</a>
+  <a class="filter-chip danger-chip {% if filters.quick == 'overdue' %}active{% endif %}" href="?quick=overdue">Просроченные</a>
+  <a class="filter-chip {% if filters.quick == 'today' %}active{% endif %}" href="?quick=today">Сегодня</a>
+  <a class="filter-chip review-chip {% if filters.quick == 'review' %}active{% endif %}" href="?quick=review">На проверке</a>
+  <a class="filter-chip revision-chip {% if filters.quick == 'revision' %}active{% endif %}" href="?quick=revision">На доработке</a>
+  <a class="filter-chip {% if filters.quick == 'done' %}active{% endif %}" href="?quick=done">Выполненные</a>
+</div>
+
+<section class="task-view-toolbar" aria-label="Настройки представления">
+  <details class="ux-dropdown" data-menu>
+    <summary class="btn secondary">Представление: {% if active_saved_filter %}{{ active_saved_filter.name }}{% else %}Все задачи{% endif %}</summary>
+    <div class="ux-dropdown-panel">
+      <a href="{% url 'task_list' %}">Все задачи</a>
+      {% for saved in saved_filters %}
+        <div class="view-option"><a href="{% url 'saved_filter_apply' saved.pk %}">{{ saved.name }}</a><form method="post" action="{% url 'saved_filter_delete' saved.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" title="Удалить фильтр {{ saved.name }}" aria-label="Удалить фильтр {{ saved.name }}">×</button></form></div>
+      {% endfor %}
+      <details class="new-view-details"><summary>+ Сохранить текущее</summary>
+        <form method="post" action="{% url 'saved_filter_create' %}" class="saved-filter-create">
+          {% csrf_token %}<input type="hidden" name="query_string" value="{{ current_filter_query }}"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+          {{ saved_filter_form.name }}<button type="submit" class="btn primary">Сохранить</button>
+        </form>
+      </details>
+    </div>
+  </details>
+  <details class="ux-details" data-filter-panel>
+    <summary class="btn secondary">Фильтры{% if active_filter_count %} ({{ active_filter_count }}){% endif %}</summary>
+    <form method="get" class="filters auto-filter advanced-filters">
+      <select name="status" aria-label="Статус" onchange="this.form.submit()"><option value="">Все статусы</option>{% for value,label in statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      <select name="priority" aria-label="Приоритет" onchange="this.form.submit()"><option value="">Все приоритеты</option>{% for value,label in priorities %}<option value="{{ value }}" {% if filters.priority == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      {% if is_manager %}
+        <select name="assigned" aria-label="Исполнитель" onchange="this.form.submit()"><option value="">Все исполнители</option>{% for employee in employees %}<option value="{{ employee.pk }}" {% if filters.assigned == employee.pk|stringformat:'s' %}selected{% endif %}>{{ employee.get_full_name|default:employee.username }}</option>{% endfor %}</select>
+        <select name="responsible" aria-label="Руководитель" onchange="this.form.submit()"><option value="">Все руководители</option>{% for manager in managers %}<option value="{{ manager.pk }}" {% if filters.responsible == manager.pk|stringformat:'s' %}selected{% endif %}>{{ manager.get_full_name|default:manager.username }}</option>{% endfor %}</select>
+      {% endif %}
+      <select name="sort" aria-label="Сортировка" onchange="this.form.submit()"><option value="smart" {% if filters.sort == 'smart' %}selected{% endif %}>Сначала важные</option><option value="due" {% if filters.sort == 'due' %}selected{% endif %}>По сроку</option><option value="priority" {% if filters.sort == 'priority' %}selected{% endif %}>По приоритету</option><option value="created" {% if filters.sort == 'created' %}selected{% endif %}>По дате создания</option></select>
+      <label class="check"><input type="checkbox" name="overdue" value="1" onchange="this.form.submit()" {% if filters.overdue == '1' %}checked{% endif %}> Только просроченные</label>
+      <a class="btn secondary" href="{% url 'task_list' %}">Сбросить</a>
+    </form>
+  </details>
+  <details class="ux-dropdown" data-menu>
+    <summary class="btn secondary">Колонки</summary>
+    <div class="ux-dropdown-panel" data-columns-menu data-column-storage-key="tasktracker-cols-v080-{{ user.pk }}" data-default-hidden="manager,effort">
+      <label><input type="checkbox" value="manager" data-toggle-column> Руководитель</label>
+      <label><input type="checkbox" value="effort" data-toggle-column> Трудоёмкость</label>
+      <small class="muted">Настройка сохраняется для этого браузера</small>
+    </div>
+  </details>
+  <button class="btn secondary" type="button" data-compact-toggle aria-pressed="false">Компактный вид</button>
+</section>
+
+{% if is_manager %}
+<form method="post" action="{% url 'task_bulk_update' %}" id="bulk-task-form" class="bulk-toolbar" data-bulk-form hidden>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <div class="bulk-selection"><strong>Массовое изменение</strong><span class="muted" data-selected-count>0 выбрано</span></div>
+  <div class="bulk-control">{{ bulk_form.action.label_tag }}{{ bulk_form.action }}</div>
+  <div class="bulk-control" data-bulk-field="assignee">{{ bulk_form.assigned_to.label_tag }}{{ bulk_form.assigned_to }}</div>
+  <div class="bulk-control" data-bulk-field="manager">{{ bulk_form.responsible_manager.label_tag }}{{ bulk_form.responsible_manager }}</div>
+  <div class="bulk-control" data-bulk-field="priority">{{ bulk_form.priority.label_tag }}{{ bulk_form.priority }}</div>
+  <div class="bulk-control" data-bulk-field="due_date">{{ bulk_form.due_date.label_tag }}{{ bulk_form.due_date }}</div>
+  <button class="btn primary" type="submit" data-bulk-submit disabled>Применить</button><button class="btn secondary" type="button" data-bulk-cancel>Отмена</button>
+</form>
+{% endif %}
+
+<div class="table-wrap">
+<table class="task-list-table{% if is_manager %} task-list-table-manager{% endif %}" data-task-table>
+  <thead>
+    <tr>
+      {% if is_manager %}<th class="selection-column"><input type="checkbox" data-select-all aria-label="Выбрать все доступные задачи"></th>{% endif %}
+      <th>Название</th>
+      {% if is_manager %}<th>Исполнитель</th><th data-column="manager">Руководитель</th>{% endif %}
+      <th>Статус</th><th>Приоритет</th><th data-column="effort">Трудоёмкость</th><th>Срок</th><th>Действие</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for task in page_obj %}{% include "tasks/_task_row.html" with task=task %}{% empty %}<tr><td colspan="{% if is_manager %}9{% else %}6{% endif %}">Задач нет.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pagination">
+  {% if page_obj.has_previous %}<a href="?{% if query_without_page %}{{ query_without_page }}&{% endif %}page={{ page_obj.previous_page_number }}">←</a>{% endif %}
+  <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a href="?{% if query_without_page %}{{ query_without_page }}&{% endif %}page={{ page_obj.next_page_number }}">→</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

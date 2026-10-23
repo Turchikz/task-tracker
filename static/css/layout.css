@@ -1,0 +1,359 @@
+/* Application-wide responsive layout.
+   Keeps pages close to viewport width while preserving small edge gutters. */
+
+:root{
+  --page-gutter:clamp(12px,1.6vw,28px);
+}
+
+.container{
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:28px var(--page-gutter) 60px;
+}
+
+.container > *{min-width:0}
+
+/* The workload page used to break out of a 1200px container manually.
+   The whole application is now fluid, so the breakout hack is no longer needed. */
+.workload-page{
+  width:100%;
+  max-width:none;
+  margin-left:0;
+  margin-right:0;
+}
+
+.page-head{
+  flex-wrap:wrap;
+  align-items:flex-start;
+}
+.page-head > div:first-child{
+  flex:1 1 320px;
+  min-width:0;
+}
+.page-head-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  margin-left:auto;
+}
+
+/* Data-heavy pages should use all available width. */
+.table-wrap,
+.calendar-wrap,
+.kanban-board,
+.notifications,
+.full-activity,
+.analytics-summary,
+.dashboard-grid{
+  width:100%;
+  max-width:none;
+}
+
+/* Forms may use the full page, while fields remain readable. */
+.form-card{
+  width:100%;
+  max-width:none;
+}
+.form-card .field > input,
+.form-card .field > select,
+.form-card .field > textarea{
+  width:100%;
+}
+.password-card{
+  max-width:760px;
+}
+
+/* Task list: scope the wide-table rules only to the task table.
+   Previous generic .table-wrap rules made unrelated tables unnecessarily wide. */
+.filters.auto-filter{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  align-items:end;
+}
+.filters.auto-filter select,
+.filters.auto-filter input{
+  width:100%;
+  min-width:0;
+}
+.filters.auto-filter .check{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+.filters.auto-filter .btn{justify-self:start}
+
+.table-wrap [data-task-table]{
+  width:100%;
+  min-width:1120px;
+  table-layout:auto;
+}
+.table-wrap [data-task-table] th,
+.table-wrap [data-task-table] td{vertical-align:middle}
+.table-wrap [data-task-table] th:first-child,
+.table-wrap [data-task-table] td:first-child{
+  min-width:280px;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.task-list-table-manager th:nth-child(2),
+.task-list-table-manager td:nth-child(2){min-width:190px}
+.table-wrap [data-task-table] th:nth-child(3),
+.table-wrap [data-task-table] td:nth-child(3),
+.table-wrap [data-task-table] th:nth-child(4),
+.table-wrap [data-task-table] td:nth-child(4),
+.table-wrap [data-task-table] th:nth-child(5),
+.table-wrap [data-task-table] td:nth-child(5),
+.table-wrap [data-task-table] th:nth-child(6),
+.table-wrap [data-task-table] td:nth-child(6){white-space:nowrap}
+.table-wrap [data-task-table] th:last-child,
+.table-wrap [data-task-table] td:last-child{
+  min-width:136px;
+  white-space:nowrap;
+}
+.quick-actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:stretch;
+}
+.quick-actions form{margin:0}
+.quick-actions .btn{width:100%;justify-content:center}
+.table-compact .quick-actions{gap:4px}
+
+/* Workload: readable task labels in narrow bars.
+   Titles wrap to two lines; if more text is clipped, JS marks the bar and
+   aligns the visible text to the left for faster scanning. */
+.workload-page .timeline-task-cell{
+  padding:5px 4px!important;
+}
+.workload-page .timeline-bar{
+  min-height:34px;
+  height:38px;
+  padding:4px 8px;
+  white-space:normal;
+  text-overflow:clip;
+  line-height:1.15;
+}
+.timeline-bar-title{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  width:100%;
+  max-width:100%;
+  overflow:hidden;
+  line-height:14px;
+  text-align:center;
+  overflow-wrap:anywhere;
+}
+.timeline-bar.is-long-title{justify-content:flex-start}
+.timeline-bar.is-long-title .timeline-bar-title{text-align:left}
+
+.timeline-absence-cell{padding:5px 4px!important}
+.timeline-absence-bar{
+  display:flex;
+  min-height:34px;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  padding:5px 8px;
+  border:1px solid #fb923c;
+  border-radius:8px;
+  background:#fff7ed;
+  color:#9a3412;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.2;
+  text-align:left;
+  overflow-wrap:anywhere;
+}
+.timeline-absence-bar > span{
+  margin-left:auto;
+  white-space:nowrap;
+  font-weight:600;
+}
+
+/* Better use of wide screens without making individual controls enormous. */
+@media(min-width:1500px){
+  .dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .kanban-board{grid-auto-columns:minmax(290px,1fr)}
+}
+
+@media(max-width:1100px){
+  .filters.auto-filter{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+  .table-wrap [data-task-table]{min-width:1040px}
+}
+
+@media(max-width:800px){
+  :root{--page-gutter:12px}
+  .container{padding-top:20px}
+  .page-head{flex-direction:column;align-items:stretch}
+  .page-head-actions{justify-content:flex-start;margin-left:0}
+  .form-card{max-width:none}
+  .workload-page{width:100%;max-width:none;margin:0}
+  .workload-page .timeline-bar{height:34px;padding:3px 6px}
+  .timeline-bar-title{line-height:13px}
+}
+
+/* === v0.7.0: responsible managers, saved filters, bulk actions and search === */
+.global-search-form{
+  display:flex;
+  align-items:center;
+  width:clamp(180px,18vw,280px);
+  min-width:150px;
+  height:36px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:9px;
+  background:rgba(255,255,255,.08);
+  overflow:hidden;
+}
+.global-search-form input{
+  width:100%;
+  min-width:0;
+  height:100%;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  color:#f8fafc!important;
+  padding:0 9px!important;
+  font:inherit;
+  font-size:13px;
+}
+.global-search-form input::placeholder{color:#9ca3af!important}
+.global-search-form button{
+  width:36px;
+  height:36px;
+  border:0;
+  background:transparent;
+  color:#dbeafe;
+  cursor:pointer;
+  font-size:19px;
+}
+.global-search-form:focus-within{border-color:#60a5fa;background:rgba(255,255,255,.12)}
+
+.saved-filter-panel{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin:0 0 12px;
+  padding:10px 12px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#fff;
+}
+.saved-filter-list{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
+.saved-filter-item{display:inline-flex;align-items:center;gap:2px}
+.saved-filter-item form{margin:0}
+.filter-chip.saved{min-height:30px;padding:5px 9px}
+.saved-filter-delete{
+  width:25px;height:25px;border:0;border-radius:50%;background:transparent;color:#94a3b8;
+  cursor:pointer;font-size:18px;line-height:1;
+}
+.saved-filter-delete:hover{background:#fee2e2;color:#b91c1c}
+.saved-filter-create{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.saved-filter-create input[type="text"]{
+  min-width:190px;height:38px;border:1px solid #cbd5e1;border-radius:8px;padding:7px 9px;font:inherit;
+}
+
+.bulk-toolbar{
+  display:grid;
+  grid-template-columns:auto minmax(160px,220px) repeat(2,minmax(170px,1fr)) auto;
+  gap:10px;
+  align-items:end;
+  margin:0 0 12px;
+  padding:11px 12px;
+  border:1px solid #dbe3ee;
+  border-radius:10px;
+  background:#f8fafc;
+}
+.bulk-selection{display:grid;gap:3px;align-self:center;white-space:nowrap}
+.bulk-control{display:grid;gap:4px;min-width:0}
+.bulk-control label{font-size:11px;color:#64748b;font-weight:700}
+.bulk-control select,.bulk-control input{
+  width:100%;min-width:0;height:38px;border:1px solid #cbd5e1;border-radius:8px;padding:7px 9px;background:#fff;font:inherit;
+}
+.bulk-control[hidden]{display:none!important}
+.selection-column{width:42px!important;min-width:42px!important;text-align:center!important}
+.selection-column input{width:16px;height:16px;cursor:pointer}
+.readonly-marker{color:#cbd5e1}
+.manager-avatar{background:#dcfce7;color:#166534}
+.manager-inline{white-space:normal}
+.kanban-manager{margin-top:5px;font-size:11px}
+
+/* Manager task list gained two utility columns. Keep horizontal scrolling
+   predictable instead of squeezing text/buttons into each other. */
+.task-list-table-manager{min-width:1320px!important}
+.task-list-table-manager th:nth-child(2),
+.task-list-table-manager td:nth-child(2){min-width:280px!important}
+.task-list-table-manager th:nth-child(3),
+.task-list-table-manager td:nth-child(3){min-width:190px!important}
+.task-list-table-manager th:nth-child(4),
+.task-list-table-manager td:nth-child(4){min-width:180px!important}
+
+.search-page-form{
+  display:flex;gap:8px;width:min(100%,820px);margin:0 0 18px;
+}
+.search-page-form input{
+  flex:1;min-width:0;height:42px;border:1px solid #cbd5e1;border-radius:9px;padding:8px 12px;font:inherit;
+}
+.search-results-summary{margin:0 0 10px;color:#64748b}
+.search-results-list{display:grid;gap:10px}
+.search-result-card{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;
+  padding:14px 16px;border:1px solid #e5e7eb;border-radius:11px;background:#fff;color:inherit;text-decoration:none;
+}
+.search-result-card:hover{border-color:#93c5fd;box-shadow:0 5px 16px rgba(15,23,42,.06)}
+.search-result-main{display:grid;gap:6px;min-width:0}
+.search-result-description{overflow:hidden;text-overflow:ellipsis}
+.search-result-meta{display:grid;gap:5px;justify-items:end;text-align:right;font-size:12px;color:#64748b}
+
+html[data-theme="dark"] .saved-filter-panel,
+html[data-theme="dark"] .search-result-card{
+  background:var(--tt-surface)!important;border-color:var(--tt-border)!important;color:var(--tt-text)!important;
+}
+html[data-theme="dark"] .bulk-toolbar{background:var(--tt-surface-2)!important;border-color:var(--tt-border)!important}
+html[data-theme="dark"] .saved-filter-create input,
+html[data-theme="dark"] .bulk-control select,
+html[data-theme="dark"] .bulk-control input,
+html[data-theme="dark"] .search-page-form input{
+  background:#0f1728!important;color:var(--tt-text)!important;border-color:var(--tt-border-strong)!important;
+}
+
+@media(max-width:1250px){
+  .topbar{flex-wrap:wrap}
+  .topbar nav{order:2;width:100%}
+  .global-search-form{margin-left:auto}
+  .bulk-toolbar{grid-template-columns:repeat(3,minmax(160px,1fr))}
+  .bulk-selection{grid-column:1/-1}
+}
+@media(max-width:800px){
+  .global-search-form{order:3;width:100%;max-width:none;margin:0}
+  .account{order:1;margin-left:auto}
+  .bulk-toolbar{grid-template-columns:1fr}
+  .bulk-selection{grid-column:auto}
+  .saved-filter-panel{align-items:stretch}
+  .saved-filter-create{width:100%}
+  .saved-filter-create input[type="text"]{flex:1;min-width:140px}
+  .search-result-card{grid-template-columns:1fr}
+  .search-result-meta{justify-items:start;text-align:left}
+}
+
+/* Correct column geometry after adding the bulk-selection checkbox. */
+.task-list-table-manager th:first-child,
+.task-list-table-manager td:first-child{
+  width:42px!important;min-width:42px!important;max-width:42px!important;white-space:nowrap!important;overflow-wrap:normal!important;
+}
+.task-list-table-manager th:nth-child(2),
+.task-list-table-manager td:nth-child(2){min-width:300px!important;white-space:normal!important;overflow-wrap:anywhere}
+.task-list-table-manager th:nth-child(3),
+.task-list-table-manager td:nth-child(3),
+.task-list-table-manager th:nth-child(4),
+.task-list-table-manager td:nth-child(4){min-width:190px!important;white-space:normal!important}

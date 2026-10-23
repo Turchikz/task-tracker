@@ -1,0 +1,21 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+db.sqlite3
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+staticfiles/
+.idea/
+.vscode/
+.DS_Store
+
+backups/
+
+# v0.9 host-generated monitoring (metadata only)
+backup_status/*.json
+backup_status/*.tmp
+!backup_status/.gitkeep

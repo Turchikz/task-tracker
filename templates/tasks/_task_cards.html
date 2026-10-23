@@ -1,0 +1,18 @@
+<div class="task-cards">
+{% for task in tasks %}
+  <article class="task-card task-card-enhanced today-task-card">
+    <a class="task-card-main" href="{% url 'task_detail' task.pk %}" title="{{ task.title }}">
+      <strong><span class="task-id muted">#{{ task.pk }}</span> {{ task.title }}</strong><span class="team-card-avatars">{% include "partials/team_avatars.html" with task=task %}</span>
+      <div class="task-card-badges">{% include "tasks/_status_badge.html" with task=task %}{% include "tasks/_priority_badge.html" with task=task %}</div>
+      <span class="deadline {{ task.deadline_state }}">{{ task.deadline_label }}</span>
+    </a>
+    {% if user in task.team_members %}
+      {% if task.status == 'new' or task.status == 'revision' %}
+        <form method="post" action="{% url 'task_quick_action' task.pk %}" class="task-card-inline-action">{% csrf_token %}<input type="hidden" name="action" value="start"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" class="btn mini primary">Начать работу</button></form>
+      {% elif task.status == 'in_progress' %}
+        <form method="post" action="{% url 'task_quick_action' task.pk %}" class="task-card-inline-action">{% csrf_token %}<input type="hidden" name="action" value="submit"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" class="btn mini primary">На проверку</button></form>
+      {% endif %}
+    {% endif %}
+  </article>
+{% empty %}<div class="empty">Нет задач.</div>{% endfor %}
+</div>

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Отсутствия сотрудников{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Отсутствия сотрудников</h1><p class="muted">Отпуск, командировка, больничный и другие периоды недоступности.</p></div></div>
+<div class="dashboard-grid absence-layout">
+<section class="card">
+  <h2>Добавить отсутствие</h2>
+  <form method="post" class="form-grid absence-form">{% csrf_token %}
+    {% for field in form %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="error">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
+    {% if form.non_field_errors %}<div class="error">{{ form.non_field_errors }}</div>{% endif %}
+    <button class="btn primary" type="submit">Добавить</button>
+  </form>
+</section>
+<section class="card">
+  <h2>Текущие и предстоящие</h2>
+  <div class="absence-list">{% for absence in active_upcoming %}<div class="absence-row {% if absence.is_current %}absence-current{% endif %}"><div><strong>{{ absence.user.get_full_name|default:absence.user.username }}</strong><div>{{ absence.start_date|date:"d.m.Y" }} — {{ absence.end_date|date:"d.m.Y" }}</div><div class="muted">{{ absence.reason|default:"Причина не указана" }}</div></div><div>{% if absence.is_current %}<span class="status-badge status-revision">Отсутствует сейчас</span>{% else %}<span class="status-badge status-new">Запланировано</span>{% endif %}<form method="post" action="{% url 'absence_delete' absence.pk %}" onsubmit="return confirm('Удалить период отсутствия?');">{% csrf_token %}<button class="link-danger" type="submit">Удалить</button></form></div></div>{% empty %}<div class="empty">Нет текущих или предстоящих отсутствий.</div>{% endfor %}</div>
+</section>
+</div>
+<section class="card absence-impact" id="absence-impact">
+  <div class="section-heading"><div><h2>Задачи, затронутые отсутствиями</h2><p class="muted">Рекомендации по свободной загрузке. Передача выполняется только после подтверждения руководителем.</p></div><span class="count-pill">{{ affected_tasks|length }}</span></div>
+  <div class="table-wrap"><table><thead><tr><th>Задача</th><th>Отсутствующий</th><th>Роль</th><th>Рекомендуемый исполнитель</th><th>Действие</th></tr></thead><tbody>
+  {% for item in affected_tasks %}
+    <tr>
+      <td><a href="{% url 'task_detail' item.task.pk %}">#{{ item.task.pk }} {{ item.task.title }}</a><small class="muted">Срок: {{ item.task.due_date|date:'d.m.Y'|default:'не указан' }}</small></td>
+      <td>{{ item.absence.user.get_full_name|default:item.absence.user.username }}<small class="muted">{{ item.absence.start_date|date:'d.m' }}–{{ item.absence.end_date|date:'d.m' }}</small></td>
+      <td>{% if item.is_primary %}Основной{% else %}Соисполнитель{% endif %}</td>
+      <td>
+        {% if item.replacement_options %}
+        <form id="replacement-{{ forloop.counter }}" method="post" action="{% if item.is_primary %}{% url 'task_handover' item.task.pk %}{% else %}{% url 'task_substitute' item.task.pk %}{% endif %}">
+          {% csrf_token %}
+          <input type="hidden" name="from_employee" value="{{ item.absence.user_id }}">
+          <input type="hidden" name="reason" value="{{ item.reason }}">
+          <select name="to_employee" aria-label="Новый исполнитель для задачи #{{ item.task.pk }}" required>
+            {% for candidate in item.replacement_options %}
+              <option value="{{ candidate.user.pk }}">{{ candidate.user.get_full_name|default:candidate.user.username }} · балл {{ candidate.score }}{% if candidate.overdue_count %} · просрочено {{ candidate.overdue_count }}{% endif %}</option>
+            {% endfor %}
+          </select>
+        </form>
+        {% else %}<span class="muted">Нет доступных кандидатов</span>{% endif %}
+      </td>
+      <td>{% if item.replacement_options %}<button form="replacement-{{ forloop.counter }}" class="btn mini primary" type="submit" onclick="return confirm('Подтвердить передачу задачи?');">Передать</button>{% else %}—{% endif %}</td>
+    </tr>
+  {% empty %}<tr><td colspan="5" class="empty">Нет активных задач, требующих перераспределения.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<section><h2>Недавняя история</h2><div class="table-wrap"><table><thead><tr><th>Сотрудник</th><th>Период</th><th>Причина</th></tr></thead><tbody>{% for absence in recent_past %}<tr><td>{{ absence.user.get_full_name|default:absence.user.username }}</td><td>{{ absence.start_date|date:"d.m.Y" }} — {{ absence.end_date|date:"d.m.Y" }}</td><td>{{ absence.reason|default:"—" }}</td></tr>{% empty %}<tr><td colspan="3">Истории пока нет.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

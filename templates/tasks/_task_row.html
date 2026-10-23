@@ -1,0 +1,38 @@
+<tr class="task-table-row">
+  {% if is_manager %}
+  <td class="selection-column">
+    {% if user.is_superuser or task.responsible_manager_id == user.id or not task.responsible_manager_id and task.created_by_id == user.id %}
+      <input type="checkbox" name="task_ids" value="{{ task.pk }}" form="bulk-task-form" data-task-select aria-label="Выбрать задачу {{ task.pk }}">
+    {% else %}
+      <span class="readonly-marker" title="Задача другого ответственного руководителя">—</span>
+    {% endif %}
+  </td>
+  {% endif %}
+  <td><a class="task-title-link" href="{% url 'task_detail' task.pk %}" title="{{ task.title }}"><span class="task-id muted">#{{ task.pk }}</span> {{ task.title }}</a></td>
+  {% if is_manager %}
+    <td><span class="employee-inline">{% include "partials/team_avatars.html" with task=task %}<span class="team-primary-label">{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</span></span></td>
+    <td data-column="manager"><span class="employee-inline manager-inline"><span class="avatar-initials manager-avatar">{% if task.responsible_manager %}{{ task.responsible_manager.first_name|default:task.responsible_manager.username|slice:":1" }}{{ task.responsible_manager.last_name|slice:":1" }}{% else %}{{ task.created_by.first_name|default:task.created_by.username|slice:":1" }}{{ task.created_by.last_name|slice:":1" }}{% endif %}</span>{% if task.responsible_manager %}{{ task.responsible_manager.get_full_name|default:task.responsible_manager.username }}{% else %}{{ task.created_by.get_full_name|default:task.created_by.username }}{% endif %}</span></td>
+  {% endif %}
+  <td>{% include "tasks/_status_badge.html" with task=task %}</td>
+  <td>{% include "tasks/_priority_badge.html" with task=task %}</td>
+  <td data-column="effort">{{ task.get_effort_display }}</td>
+  <td><span class="deadline {{ task.deadline_state }}">{{ task.deadline_label }}</span></td>
+  <td>
+    <div class="quick-actions">
+      {% if is_manager %}
+        {% if user.is_superuser or task.responsible_manager_id == user.id or not task.responsible_manager_id and task.created_by_id == user.id %}
+          {% if task.status == 'review' %}
+            <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="accept"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini success" type="submit">Принять</button></form>
+          {% elif task.status == 'new' or task.status == 'revision' %}
+            <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini primary" type="submit">В работу</button></form>
+            <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="done"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini" type="submit">Выполнено</button></form>
+          {% elif task.status == 'in_progress' %}
+            <form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="done"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini" type="submit">Выполнено</button></form>
+          {% endif %}
+        {% endif %}
+      {% else %}
+        {% if task.status == 'new' or task.status == 'revision' %}<form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="start"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini primary" type="submit">Начать</button></form>{% elif task.status == 'in_progress' %}<form method="post" action="{% url 'task_quick_action' task.pk %}">{% csrf_token %}<input type="hidden" name="action" value="submit"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini primary" type="submit">На проверку</button></form>{% endif %}
+      {% endif %}
+    </div>
+  </td>
+</tr>

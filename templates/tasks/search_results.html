@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Поиск задач{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Поиск задач</h1>
+    {% if query %}<p class="muted">Результаты по запросу «{{ query }}».</p>{% else %}<p class="muted">Введите номер задачи, название, текст, сотрудника, руководителя или фрагмент комментария.</p>{% endif %}
+  </div>
+</div>
+
+<form method="get" action="{% url 'global_search' %}" class="search-page-form">
+  <input type="search" name="q" value="{{ query }}" placeholder="Например: #26, поверка, Алаева" autofocus>
+  <button class="btn primary" type="submit">Найти</button>
+</form>
+
+{% if query %}
+<div class="search-results-summary">Найдено: <strong>{{ page_obj.paginator.count }}</strong></div>
+<div class="search-results-list">
+  {% for task in page_obj %}
+    <a class="search-result-card" href="{% url 'task_detail' task.pk %}">
+      <div class="search-result-main">
+        <div class="task-card-badges"><span class="task-id muted">#{{ task.pk }}</span>{% include "tasks/_status_badge.html" with task=task %}{% include "tasks/_priority_badge.html" with task=task %}</div>
+        <strong>{{ task.title }}</strong>
+        {% if task.match_comment %}<div class="muted search-result-description"><span class="search-match-label">Совпадение в комментарии:</span> {{ task.match_comment|truncatechars:180 }}</div>
+        {% elif task.match_in_description %}<div class="muted search-result-description"><span class="search-match-label">Совпадение в описании:</span> {{ task.match_description }}</div>
+        {% elif task.description %}<div class="muted search-result-description">{{ task.description|truncatechars:180 }}</div>{% endif %}
+      </div>
+      <div class="search-result-meta">
+        <span>Исполнители: {{ task.team_names }}</span>
+        {% if is_manager %}<span>Ответственный: {% if task.responsible_manager %}{{ task.responsible_manager.get_full_name|default:task.responsible_manager.username }}{% else %}{{ task.created_by.get_full_name|default:task.created_by.username }}{% endif %}</span>{% endif %}
+        <span class="deadline {{ task.deadline_state }}">{{ task.deadline_label }}</span>
+      </div>
+    </a>
+  {% empty %}<div class="empty">Совпадений нет.</div>{% endfor %}
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}<div class="pagination">{% if page_obj.has_previous %}<a href="?{% if query_without_page %}{{ query_without_page }}&{% endif %}page={{ page_obj.previous_page_number }}">←</a>{% endif %}<span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="?{% if query_without_page %}{{ query_without_page }}&{% endif %}page={{ page_obj.next_page_number }}">→</a>{% endif %}</div>{% endif %}
+{% endif %}
+{% endblock %}

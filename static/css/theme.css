@@ -1,0 +1,392 @@
+
+/* Dark and light theme palette.
+   Loaded after app.css / task_review.css / page-specific CSS so it can safely
+   override the existing light palette without rewriting the whole project.
+*/
+
+:root{
+  --tt-bg:#f6f7f9;
+  --tt-surface:#ffffff;
+  --tt-surface-2:#f8fafc;
+  --tt-surface-3:#f1f5f9;
+  --tt-text:#1f2937;
+  --tt-text-strong:#111827;
+  --tt-muted:#6b7280;
+  --tt-border:#e5e7eb;
+  --tt-border-strong:#cbd5e1;
+  --tt-link:#1d4ed8;
+  --tt-shadow:rgba(15,23,42,.08);
+  --tt-topbar:#111827;
+  --tt-topbar-text:#e5e7eb;
+  --tt-accent:#2563eb;
+  --tt-accent-soft:#dbeafe;
+  color-scheme:light;
+}
+
+html[data-theme="dark"]{
+  --tt-bg:#0b1020;
+  --tt-surface:#141b2d;
+  --tt-surface-2:#192237;
+  --tt-surface-3:#202b42;
+  --tt-text:#dbe4f0;
+  --tt-text-strong:#f8fafc;
+  --tt-muted:#93a4ba;
+  --tt-border:#2a3850;
+  --tt-border-strong:#3b4d68;
+  --tt-link:#8bb7ff;
+  --tt-shadow:rgba(0,0,0,.28);
+  --tt-topbar:#080d18;
+  --tt-topbar-text:#d7e0ec;
+  --tt-accent:#60a5fa;
+  --tt-accent-soft:#1e3a5f;
+  color-scheme:dark;
+}
+
+html,
+body{
+  background:var(--tt-bg)!important;
+  color:var(--tt-text)!important;
+}
+
+body,
+.card,
+.stat,
+.filters,
+.form-card,
+.auth-card,
+.task-card,
+.notification,
+.table-wrap,
+.calendar-wrap,
+.workload-timeline-wrap,
+.comment-item,
+.comment-form,
+.history-list,
+.kanban-card,
+.kanban-column,
+.kanban-column-head,
+.review-actions,
+.revision-box,
+.full-activity,
+.calendar-day-legend,
+.workload-head-card,
+.timeline-legend-card,
+.workload-clean-filter,
+.workload-clean-month,
+.workload-clean-legend,
+.employee-login-card{
+  transition:
+    background-color .22s ease,
+    border-color .22s ease,
+    color .22s ease,
+    box-shadow .22s ease;
+}
+
+html[data-theme="dark"] .topbar{
+  background:var(--tt-topbar)!important;
+  border-bottom:1px solid #1d2940;
+  box-shadow:0 8px 24px rgba(0,0,0,.20);
+}
+
+html[data-theme="dark"] .brand,
+html[data-theme="dark"] .topbar nav a,
+html[data-theme="dark"] .account,
+html[data-theme="dark"] .account-link,
+html[data-theme="dark"] .link-button{
+  color:var(--tt-topbar-text)!important;
+}
+
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] strong,
+html[data-theme="dark"] dt,
+html[data-theme="dark"] .task-title-link,
+html[data-theme="dark"] .employee-link{
+  color:var(--tt-text-strong);
+}
+
+html[data-theme="dark"] a{
+  color:var(--tt-link);
+}
+
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .count,
+html[data-theme="dark"] .timeline-employee-meta,
+html[data-theme="dark"] .facts-list dt,
+html[data-theme="dark"] .plan-fact-row span,
+html[data-theme="dark"] .comment-meta span,
+html[data-theme="dark"] .breadcrumbs,
+html[data-theme="dark"] .employee-login-help{
+  color:var(--tt-muted)!important;
+}
+
+/* Generic surfaces */
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .stat,
+html[data-theme="dark"] .filters,
+html[data-theme="dark"] .form-card,
+html[data-theme="dark"] .auth-card,
+html[data-theme="dark"] .task-card,
+html[data-theme="dark"] .notification,
+html[data-theme="dark"] .table-wrap,
+html[data-theme="dark"] .calendar-wrap,
+html[data-theme="dark"] .workload-timeline-wrap,
+html[data-theme="dark"] .comment-item,
+html[data-theme="dark"] .comment-form,
+html[data-theme="dark"] .history-list,
+html[data-theme="dark"] .full-activity,
+html[data-theme="dark"] .calendar-day-legend,
+html[data-theme="dark"] .workload-head-card,
+html[data-theme="dark"] .timeline-legend-card,
+html[data-theme="dark"] .workload-clean-filter,
+html[data-theme="dark"] .workload-clean-month,
+html[data-theme="dark"] .workload-clean-legend,
+html[data-theme="dark"] .employee-login-card{
+  background:var(--tt-surface)!important;
+  border-color:var(--tt-border)!important;
+  color:var(--tt-text)!important;
+  box-shadow:0 10px 30px var(--tt-shadow);
+}
+
+html[data-theme="dark"] .empty{
+  background:var(--tt-surface)!important;
+  color:var(--tt-muted)!important;
+}
+
+html[data-theme="dark"] th,
+html[data-theme="dark"] .workload-timeline thead th,
+html[data-theme="dark"] .workload-clean-table thead .timeline-fixed{
+  background:var(--tt-surface-2)!important;
+  color:var(--tt-text)!important;
+  border-color:var(--tt-border)!important;
+}
+
+html[data-theme="dark"] td,
+html[data-theme="dark"] th,
+html[data-theme="dark"] .rank-row,
+html[data-theme="dark"] .history-event,
+html[data-theme="dark"] .facts-list div,
+html[data-theme="dark"] .plan-fact-row,
+html[data-theme="dark"] .activity-item{
+  border-color:var(--tt-border)!important;
+}
+
+html[data-theme="dark"] .timeline-fixed,
+html[data-theme="dark"] .workload-clean-table .timeline-fixed{
+  background:var(--tt-surface)!important;
+}
+
+html[data-theme="dark"] .workload-clean-wrap,
+html[data-theme="dark"] .workload-timeline-wrap-availability,
+html[data-theme="dark"] .workload-timeline-wrap-visual{
+  background:var(--tt-surface)!important;
+  border-color:var(--tt-border)!important;
+}
+
+/* Inputs */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .employee-native-select,
+html[data-theme="dark"] .employee-login-password{
+  background:#0f1728!important;
+  color:var(--tt-text)!important;
+  border-color:var(--tt-border-strong)!important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder{
+  color:#65758c!important;
+}
+
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] select:focus,
+html[data-theme="dark"] textarea:focus{
+  border-color:#60a5fa!important;
+  box-shadow:0 0 0 3px rgba(96,165,250,.16)!important;
+}
+
+/* Buttons */
+html[data-theme="dark"] .btn{
+  background:#1b263b!important;
+  border-color:#3a4a65!important;
+  color:#e8eef7!important;
+}
+
+html[data-theme="dark"] .btn:hover{
+  background:#24324b!important;
+}
+
+html[data-theme="dark"] .btn.primary{
+  background:#2563eb!important;
+  border-color:#3b82f6!important;
+  color:#fff!important;
+}
+
+html[data-theme="dark"] .btn.success{
+  background:#15803d!important;
+  border-color:#22c55e!important;
+  color:#fff!important;
+}
+
+html[data-theme="dark"] .btn.danger{
+  background:#3b1720!important;
+  border-color:#7f1d2d!important;
+  color:#fecdd3!important;
+}
+
+/* Dashboard / task lists */
+html[data-theme="dark"] .task-card,
+html[data-theme="dark"] .kanban-card{
+  background:var(--tt-surface)!important;
+  border-color:var(--tt-border)!important;
+}
+
+html[data-theme="dark"] .kanban-column{
+  background:#101827!important;
+  border-color:var(--tt-border)!important;
+}
+
+html[data-theme="dark"] .kanban-column-head{
+  background:#172136!important;
+  border-color:var(--tt-border)!important;
+}
+
+html[data-theme="dark"] .count-pill,
+html[data-theme="dark"] .timeline-score{
+  background:#263653!important;
+  color:#dce8fb!important;
+}
+
+html[data-theme="dark"] .task-action-bar{
+  background:rgba(20,27,45,.94)!important;
+  border-color:var(--tt-border)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+
+html[data-theme="dark"] .revision-box{
+  background:#302713!important;
+  border-color:#8a651d!important;
+  color:#fde7a9!important;
+}
+
+/* Calendar */
+html[data-theme="dark"] .calendar-production .calendar-day{
+  background:#111a2b!important;
+  color:var(--tt-text)!important;
+  border-color:var(--tt-border)!important;
+}
+
+html[data-theme="dark"] .calendar-production .calendar-day.production-weekend{
+  background:#1d2738!important;
+}
+
+html[data-theme="dark"] .calendar-production .calendar-day.production-holiday{
+  background:#382719!important;
+  box-shadow:inset 0 0 0 1px #7c4a20;
+}
+
+html[data-theme="dark"] .calendar-production .calendar-day.production-working-override{
+  background:#153223!important;
+  box-shadow:inset 0 0 0 1px #256c43;
+}
+
+html[data-theme="dark"] .calendar-day.outside{
+  color:#6d7c91!important;
+}
+
+html[data-theme="dark"] .calendar-task{
+  color:#e7edf7!important;
+}
+
+/* Workload timeline. Preserve semantic weekend/holiday colors, but darken them. */
+html[data-theme="dark"] .workload-clean-table col.timeline-date-col{
+  background:#121b2c!important;
+  background-image:none!important;
+}
+
+html[data-theme="dark"] .workload-clean-table col.timeline-date-col.weekend{
+  background:#1e293b!important;
+}
+
+html[data-theme="dark"] .workload-clean-table col.timeline-date-col.holiday{
+  background:#3a291b!important;
+}
+
+html[data-theme="dark"] .workload-clean-table col.timeline-date-col.working-override{
+  background:#173323!important;
+}
+
+html[data-theme="dark"] .workload-clean-table .timeline-day-head{
+  background:#192338!important;
+  color:#cbd5e1!important;
+}
+
+html[data-theme="dark"] .workload-clean-table .timeline-day-head.weekend{
+  background:#273449!important;
+}
+
+html[data-theme="dark"] .workload-clean-table .timeline-day-head.holiday{
+  background:#53351f!important;
+  color:#ffd7ad!important;
+}
+
+html[data-theme="dark"] .workload-clean-table .timeline-day-head.working-override{
+  background:#1d4a31!important;
+  color:#bbf7d0!important;
+}
+
+html[data-theme="dark"] .workload-clean-table .timeline-empty{
+  border-right-color:#2b3a50!important;
+}
+
+html[data-theme="dark"] .timeline-absence-bar{
+  background:#472c16!important;
+  color:#fed7aa!important;
+  border-color:#c56a24!important;
+}
+
+/* Notifications / activity */
+html[data-theme="dark"] .notification.unread{
+  border-left-color:#60a5fa!important;
+}
+
+html[data-theme="dark"] .activity-icon{
+  box-shadow:0 0 0 3px #202b42!important;
+}
+
+/* Login */
+html[data-theme="dark"] .employee-login-card{
+  background:#111827!important;
+}
+
+html[data-theme="dark"] .employee-login-logo{
+  background:#e5edf8!important;
+  color:#111827!important;
+}
+
+html[data-theme="dark"] .employee-login-heading h1,
+html[data-theme="dark"] .employee-login-field>label{
+  color:#f8fafc!important;
+}
+
+html[data-theme="dark"] .employee-login-heading p{
+  color:#93a4ba!important;
+}
+
+html[data-theme="dark"] .employee-login-error{
+  background:#3b1720!important;
+  border-color:#7f1d2d!important;
+  color:#fecdd3!important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,
+  *::before,
+  *::after{
+    transition-duration:.01ms!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+  }
+}

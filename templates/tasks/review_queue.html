@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Ожидают проверки{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Ожидают проверки</h1><p class="muted">Сначала показаны задачи, которые дольше всего ждут решения руководителя.</p></div></div>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Задача</th><th>Исполнитель</th><th>Статус</th><th>Отправлена</th><th>Срок</th><th>Приоритет</th><th>Действие</th></tr></thead>
+  <tbody>
+  {% for task in tasks %}
+    <tr>
+      <td><a class="task-title-link" href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></td>
+      <td>{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}{% if task.additional_assignees.count %}<span class="team-count" title="{{ task.team_names }}">+{{ task.additional_assignees.count }}</span>{% endif %}</td>
+      <td>{% include "tasks/_status_badge.html" with task=task %}</td>
+      <td>{% if task.submitted_at %}{{ task.submitted_at|date:"d.m.Y H:i" }}{% else %}—{% endif %}</td>
+      <td>{% if task.due_date %}{{ task.due_date|date:"d.m.Y" }}{% else %}—{% endif %}</td>
+      <td>{% include "tasks/_priority_badge.html" with task=task %}</td>
+      <td><form method="post" action="{% url 'task_quick_action' task.pk %}" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="accept"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn mini success" type="submit">Принять</button></form></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="empty">Нет задач, ожидающих проверки.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

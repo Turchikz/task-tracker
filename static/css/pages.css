@@ -1,0 +1,89 @@
+/* v0.8.0 page-specific UX. Layout rules are additive and intentionally scoped. */
+.task-view-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 14px}
+.ux-dropdown,.ux-details{position:relative}
+.ux-dropdown-panel{top:calc(100% + 6px);min-width:240px}
+.ux-dropdown-panel .view-option{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ux-dropdown-panel .view-option>a{flex:1;min-width:0}
+.view-option form{margin:0}.view-option button{border:0;background:transparent;color:var(--tt-muted);font-size:19px;width:32px;height:32px;border-radius:7px}
+.view-option button:hover{background:#fee2e2;color:#be123c}
+.ux-dropdown-panel label{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;white-space:nowrap}
+.ux-dropdown-panel small{white-space:normal;padding:6px 10px}
+.new-view-details{padding:9px 10px;margin-top:4px;border-top:1px solid var(--tt-border,#e2e8f0);font-size:13px}
+.new-view-details summary{font-weight:700;color:var(--tt-link,#2563eb)}
+.new-view-details .saved-filter-create{display:grid;grid-template-columns:1fr auto;margin-top:9px;gap:6px}
+.new-view-details input{min-width:0!important;width:100%}
+.ux-details[open]{flex:1 0 100%}
+.ux-details[open]>summary{width:max-content;margin-bottom:10px}
+.advanced-filters{margin:0!important;border-color:var(--tt-border,#e2e8f0);background:var(--tt-surface,#fff)}
+[data-column][hidden],.bulk-toolbar[hidden]{display:none!important}
+.bulk-toolbar:not([hidden]){position:sticky;bottom:12px;z-index:45;display:flex;flex-wrap:wrap;align-items:end;gap:9px;box-shadow:var(--ui-elevation);border-color:var(--tt-accent,#2563eb);border-width:1px;background:var(--tt-surface,#fff)!important;max-width:100%;margin-bottom:16px}
+.bulk-toolbar .bulk-selection{min-width:135px}
+.bulk-toolbar .bulk-control:not([hidden]){min-width:min(100%,190px)}
+.bulk-toolbar .bulk-control{flex:1 1 185px}
+.bulk-toolbar .bulk-control:first-of-type{max-width:240px}
+.bulk-toolbar [data-bulk-submit]{min-width:105px}
+.bulk-toolbar [data-bulk-cancel]{white-space:nowrap}
+.table-wrap [data-task-table]{width:100%!important;min-width:940px!important}
+.task-list-table-manager{min-width:1100px!important}
+.task-list-table-manager th[data-column],.task-list-table-manager td[data-column]{min-width:0!important}
+.task-list-table-manager th:nth-child(2),.task-list-table-manager td:nth-child(2){min-width:240px!important}
+.task-list-table-manager td:last-child,.task-list-table-manager th:last-child{min-width:125px!important}
+.task-list-table-manager td:nth-child(3){white-space:normal}
+/* Task details: primary action first in the visual and tab reading order via DOM rearrangement in JS. */
+.task-action-priority{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.task-action-priority .secondary-task-action{order:5}
+.task-action-priority form:has(.btn.primary),.task-action-priority form:has(.btn.success){order:0}
+.task-action-priority .btn.danger{order:3}
+.history-section.is-collapsed .history-event.history-extra{display:none}
+.history-section.history-expanded .history-event.history-extra{display:grid}
+.history-show-more{margin:12px 0 0}
+/* Task forms: semantic two-column grid; workload table remains fully visible. */
+.task-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px;margin:16px 0 20px}
+.task-form-grid .field{min-width:0;margin:0}
+.task-form-grid .field-title,.task-form-grid .field-description,.task-form-grid .field-status,.task-form-grid .field-revision_reason{grid-column:1/-1}
+.task-form-grid textarea,.task-form-grid input,.task-form-grid select{max-width:100%;width:100%}
+.task-edit-form .workload-panel{width:100%;margin:12px 0 22px}
+.task-edit-form .workload-panel .table-wrap{width:100%;max-width:100%;overflow:auto}
+/* Today card needs a separate clickable area and a direct task action. */
+.today-task-card{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.today-task-card .task-card-main{min-width:180px;flex:1 1 auto;text-decoration:none;color:inherit}
+.today-task-card .task-card-inline-action{margin:0;padding:10px 14px}
+.today-task-card .task-card-inline-action .btn{min-width:120px}
+/* Calendar month/list responsive switch. */
+.calendar-display-switch{display:flex;gap:8px;margin:14px 0}
+.calendar-display-switch .is-selected,.workload-period-switch .is-selected{background:var(--tt-accent-soft,#dbeafe)!important;border-color:var(--tt-accent,#2563eb)!important;color:var(--tt-link,#1d4ed8)!important;font-weight:750}
+.calendar-agenda{display:grid;gap:10px}
+.calendar-agenda[hidden]{display:none}
+.calendar-wrap.calendar-is-hidden{display:none}
+.agenda-day{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:13px 16px;border:1px solid var(--tt-border,#e2e8f0);border-radius:11px;background:var(--tt-surface,#fff)}
+.agenda-date{display:grid;align-content:start;gap:4px}.agenda-date small{font-size:12px;color:var(--tt-muted)}
+.agenda-tasks{display:grid;gap:6px}.agenda-task{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;border-radius:8px;background:var(--tt-surface-2,#f8fafc);padding:9px 12px;color:var(--tt-text,#111827);text-decoration:none}
+.agenda-task:hover{outline:1px solid var(--tt-accent,#2563eb)}
+.agenda-task span{font-size:12px;color:var(--tt-muted)}
+.kanban-ux-tools{display:flex;align-items:center;gap:12px;margin:0 0 10px}
+.kanban-ux-tools .check{font-size:13px}
+.kanban-board.hide-empty-columns .is-empty-column{display:none}
+.kanban-column-head{position:sticky;top:0;z-index:4}
+.notification-view-options{display:flex;gap:8px;margin:14px 0}
+.notification-view-options .is-selected{background:var(--tt-accent-soft,#dbeafe);border-color:var(--tt-accent,#2563eb);color:var(--tt-link,#1d4ed8);font-weight:700}
+.notification-date-heading{margin:10px 0 4px;font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--tt-muted)}
+.notification[hidden],.notification-date-heading[hidden]{display:none!important}
+.search-match-label{font-weight:750;color:var(--tt-link,#1d4ed8)}
+.rat-login-logo{background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.rat-login-logo img{width:100%;height:100%;object-fit:contain}
+.workload-period-switch{display:flex;gap:7px;margin:0 0 11px}
+.workload-period-switch .btn{min-height:35px;padding:6px 10px;font-size:13px}
+.workload-tooltip{position:fixed;z-index:300;max-width:min(360px,85vw);padding:11px 14px;background:var(--tt-surface,#fff);color:var(--tt-text,#111827);border:1px solid var(--tt-border,#cbd5e1);border-radius:10px;box-shadow:var(--ui-elevation);font-size:13px;pointer-events:none;overflow-wrap:anywhere}
+@media(max-width:960px){.task-form-grid{grid-template-columns:1fr}.task-form-grid .field{grid-column:auto}.task-form-grid .field-title,.task-form-grid .field-description{grid-column:auto}}
+@media(max-width:760px){
+ .task-view-toolbar{gap:7px}
+ .task-view-toolbar .btn{min-height:40px}
+ .ux-details[open] .advanced-filters{grid-template-columns:1fr!important}
+ .bulk-toolbar:not([hidden]){bottom:4px;max-height:45vh;overflow:auto}
+ .bulk-toolbar .bulk-control{flex:1 1 100%}
+ .today-task-card .task-card-inline-action{width:100%;padding:0 12px 12px}
+ .today-task-card .task-card-inline-action .btn{width:100%}
+ .agenda-day{grid-template-columns:1fr;gap:8px}
+ .calendar-display-switch{justify-content:flex-start}
+ .workload-page .timeline-bar{min-height:38px}
+}
