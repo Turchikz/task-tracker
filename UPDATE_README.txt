@@ -1,16 +1,15 @@
-RaTracker 0.8.3 — полная версия проекта
+RaTracker 0.9.11 — полная версия проекта
 
-Распакуйте архив поверх текущего проекта. Сохраните существующий .env.
-Сначала создайте резервную копию базы и media.
+Новое: XLSX-отчёт по загрузке и работе отдела за произвольный период.
+Включает выполненные задачи, сводку для руководства и календарь по месяцам.
 
-Основные команды:
-  docker compose up -d --build
-  docker compose exec web python manage.py migrate
-  docker compose exec web python manage.py check
-  docker compose exec web pytest tests/test_v083_collaboration.py
+Перед обновлением сделайте резервную копию БД и media.
+Сохраните существующий .env. Не удаляйте Docker volumes.
 
-Полная инструкция: RELEASE_NOTES_0.8.3.md
-О новых функциях: docs/collaboration_and_handover.md
+docker compose up -d --build
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py collectstatic --noinput
+docker compose exec web python manage.py check
 
-Старые задачи сохраняют своих основных исполнителей; новая миграция
-0008 лишь добавляет связь с дополнительными сотрудниками и историю передач.
+Экспорт: Загрузка → даты «с» и «по» → Скачать XLSX.
+Подробности и результаты проверок: RELEASE_NOTES_0.9.11.md.

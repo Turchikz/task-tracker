@@ -36,6 +36,7 @@ from .signals import create_notification
 from .collaboration import team_progress, all_members_ready, change_member_progress
 from .absence_planning import affected_tasks_for_absences
 from .excel_reports import build_manager_excel
+from .workload_export import build_workload_excel
 from .backup_monitor import get_backup_status
 from .heatmap import get_weekly_heatmap
 from .services import (
@@ -824,10 +825,31 @@ def workload_timeline(request):
             "scope": scope,
             "period": period,
             "start_day": month_start.day,
+            "export_start": month_start.isoformat(),
+            "export_end": month_end.isoformat(),
             "prev_query": urlencode(common_prev),
             "next_query": urlencode(common_next),
         },
     )
+
+
+@login_required
+def workload_export(request):
+    if not is_manager(request.user):
+        return HttpResponseForbidden("Экспорт загрузки доступен только руководителю.")
+    try:
+        start = date.fromisoformat(request.GET.get("from", ""))
+        end = date.fromisoformat(request.GET.get("to", ""))
+        if start > end or not (2000 <= start.year <= end.year <= 2100):
+            raise ValueError
+    except (TypeError, ValueError):
+        messages.error(request, "Укажите корректный период: начало не позже окончания, годы 2000–2100.")
+        return redirect("workload_timeline")
+    content = build_workload_excel(start, end, request.build_absolute_uri("/").rstrip("/"))
+    response = HttpResponse(content, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="RaTracker_workload_{start:%Y%m%d}_{end:%Y%m%d}.xlsx"'
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @login_required
