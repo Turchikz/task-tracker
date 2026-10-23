@@ -1,0 +1,15 @@
+/* v0.9.6: final semantic color and focus layer, both themes. */
+.sound-settings-panel {background:var(--tt-surface,#fff);color:var(--tt-text,#1f2937);border-color:var(--tt-border,#cbd5e1);max-width:calc(100vw - 24px)}
+.sound-settings-panel label,.sound-settings-panel [data-volume-value] {color:var(--tt-text,#1f2937)}
+.sound-settings-panel input[type=range] {accent-color:var(--tt-accent,#2563eb)}
+.mouse-toast {background:var(--tt-surface,#fff);color:var(--tt-text-strong,#111827);border-color:var(--tt-border,#cbd5e1)}
+html[data-theme="dark"] .sound-settings-panel,html[data-theme="dark"] .mouse-toast {box-shadow:0 12px 30px rgba(0,0,0,.45)}
+html[data-theme="dark"] .sound-settings-panel button {color:var(--tt-text-strong);border-color:var(--tt-border-strong)}
+html[data-theme="dark"] .sound-settings-panel input[type=checkbox] {accent-color:var(--tt-accent)}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder {color:#a1b0c4;opacity:1}
+html[data-theme="dark"] :is(input,select,textarea):disabled {color:#9aaac0;opacity:.75}
+html[data-theme="dark"] :is(.card,.task-card,.form-card,.dropdown-panel,.sound-settings-panel) :is(a,button,input,select,textarea):focus-visible {outline-color:#93c5fd!important}
+/* The pull cord hangs below the lamp's base, without drifting off to the right. */
+.theme-bulb-pull {left:14px;top:35px}
+.theme-bulb-cord {transform:none}
+@media(max-width:600px){.sound-settings-panel{right:-12px;width:min(330px,calc(100vw - 24px))}}
