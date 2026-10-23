@@ -10,3 +10,24 @@
 /* v0.9.8: six-frame mascot sprite, no logo image. */
 .ratracker-mouse-sprite{background-image:url('../img/rat-run-sprite-6.png?v=098original');animation:rat-sprite-six .55s steps(6) infinite}
 @keyframes rat-sprite-six{from{background-position:0 0}to{background-position:-576px 0}}
+
+/* Brief paw trail during a run; it never intercepts clicks on the page. */
+.ratracker-paw{position:fixed;z-index:60;pointer-events:none;user-select:none;font-size:18px;opacity:.5;filter:grayscale(1);animation:ratracker-paw-fade 2.2s ease-out forwards}
+@keyframes ratracker-paw-fade{0%{opacity:.55}75%{opacity:.32}100%{opacity:0}}
+.ratracker-cheese-bit{position:fixed;z-index:310;pointer-events:none;user-select:none;font-size:24px;animation:ratracker-cheese-pop 1.1s ease-out forwards}
+@keyframes ratracker-cheese-pop{0%{opacity:1;transform:translate(0,0) scale(.55)}65%{opacity:1;transform:translate(var(--cheese-x),var(--cheese-y)) scale(1.1)}100%{opacity:0;transform:translate(var(--cheese-x),calc(var(--cheese-y) + 22px)) scale(.7)}}
+.mouse-collection{border-radius:9px;padding:9px 11px;background:var(--accent-soft,#eef2ff);font-size:14px;margin:10px 0}
+.mouse-collection small{display:block;margin-top:3px;font-size:11px;opacity:.75}
+@media(prefers-reduced-motion:reduce){.ratracker-paw,.ratracker-cheese-bit{animation:none;display:none}}
+.sound-settings-panel{max-height:min(78vh,660px);overflow-y:auto}
+.mouse-shop{display:grid;gap:7px;margin:10px 0 14px;border-top:1px solid var(--border,#cbd5e1);padding-top:11px}
+.mouse-shop .muted{font-size:12px;line-height:1.4;margin:1px 0 4px}
+.mouse-shop .btn{justify-content:flex-start;width:100%}
+.mouse-shop .btn:disabled{opacity:.55;cursor:default}
+.mouse-shop [data-cheese-feedback]{min-height:1em;font-size:12px;color:var(--text,#222)}
+.ratracker-outfit{position:absolute;inset:0;pointer-events:none;z-index:2}
+.ratracker-runner.running-left .ratracker-outfit{transform:scaleX(-1)}
+.ratracker-hat{position:absolute;left:29px;top:1px;width:30px;height:21px;border:2px solid #332b42;border-radius:18px 18px 5px 5px;background:var(--hat-color,#e11d48);box-shadow:inset 3px 3px 0 #ffffff55,0 1px 1px #0005;transform:rotate(-7deg)}
+.ratracker-hat::after{content:"";position:absolute;left:-5px;bottom:-3px;width:39px;height:5px;background:var(--hat-color,#e11d48);border:2px solid #332b42;border-radius:6px}
+.ratracker-scarf{position:absolute;left:27px;top:39px;width:24px;height:9px;border:2px solid #332b42;border-radius:8px;background:var(--scarf-color,#2563eb);transform:rotate(-9deg);box-shadow:0 1px 1px #0005}
+.ratracker-scarf::after{content:"";position:absolute;left:3px;top:6px;width:8px;height:18px;background:var(--scarf-color,#2563eb);border:2px solid #332b42;border-radius:0 0 5px 5px;transform:rotate(18deg)}

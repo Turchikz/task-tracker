@@ -886,6 +886,14 @@ def calendar_view(request):
     for task in qs.order_by("due_date", "priority", "title"):
         task_map.setdefault(task.due_date, []).append(task)
 
+    absence_map = {}
+    for absence in EmployeeAbsence.objects.filter(
+        start_date__lte=range_end, end_date__gte=range_start,
+    ).select_related("user").order_by("user__last_name", "user__first_name", "user__username", "start_date"):
+        for offset in range((min(absence.end_date, range_end) - max(absence.start_date, range_start)).days + 1):
+            absence_day = max(absence.start_date, range_start) + timedelta(days=offset)
+            absence_map.setdefault(absence_day, []).append(absence)
+
     calendar_map = get_rt_calendar_map(range_start, range_end)
     weeks = []
     for week in month_days:
@@ -897,6 +905,7 @@ def calendar_view(request):
                     "date": day,
                     "in_month": day.month == month,
                     "tasks": task_map.get(day, []),
+                    "absences": absence_map.get(day, []),
                     "is_weekend": calendar_day.is_weekend,
                     "is_holiday": calendar_day.is_holiday,
                     "is_non_working": calendar_day.is_non_working,
@@ -1434,6 +1443,8 @@ def sound_notifications_feed(request):
 @login_required
 def workload_guide(request):
     """Document the exact workload scoring rules implemented in services.py."""
+    if not is_manager(request.user):
+        return HttpResponseForbidden("Описание расчёта нагрузки доступно только руководителю.")
     return render(request, "tasks/workload_guide.html")
 
 

@@ -19,7 +19,7 @@
   </script>
 
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
-  <link rel="stylesheet" href="{% static 'css/task_review.css' %}">
+  <link rel="stylesheet" href="{% static 'css/task_review.css' %}?v=0912">
   <link rel="stylesheet" href="{% static 'css/brand.css' %}?v=1">
 
   {% block extra_css %}{% endblock %}
@@ -34,19 +34,21 @@
   <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 
   <script defer src="{% static 'js/app.js' %}"></script>
-  <script defer src="{% static 'js/theme_toggle.js' %}?v=082"></script>
+  <script defer src="{% static 'js/theme_toggle.js' %}?v=0912"></script>
   <script defer src="{% static 'js/assignees.js' %}?v=090"></script>
   <script defer src="{% static 'js/notification_drawer.js' %}?v=090"></script>
   <link rel="stylesheet" href="{% static 'css/v090.css' %}?v=090">
-  <link rel="stylesheet" href="{% static 'css/soundscape.css' %}?v=098">
-  <link rel="stylesheet" href="{% static 'css/feature_ideas.css' %}?v=098">
-  <link rel="stylesheet" href="{% static 'css/chat.css' %}?v=099">
-  <script defer src="{% static 'js/soundscape.js' %}?v=098"></script>
+  <link rel="stylesheet" href="{% static 'css/soundscape.css' %}?v=0915">
+  <link rel="stylesheet" href="{% static 'css/feature_ideas.css' %}?v=0912">
+  <link rel="stylesheet" href="{% static 'css/chat.css' %}?v=0912">
+  <script defer src="{% static 'js/soundscape.js' %}?v=0915"></script>
   <script defer src="{% static 'js/chat_badge.js' %}?v=099"></script>
   <script defer src="{% static 'js/chat_notifications.js' %}?v=0910"></script>
   <link rel="stylesheet" href="{% static 'css/release096.css' %}?v=096">
+  <link rel="stylesheet" href="{% static 'css/roulette.css' %}?v=0916">
+  <script defer src="{% static 'js/roulette.js' %}?v=0916"></script>
 </head>
-<body{% if user.is_authenticated %} data-chat-notification-settings="{% url 'chat_notification_settings' %}" data-chat-notification-events="{% url 'chat_notification_events' %}" data-chat-user="{{ user.pk }}" data-sound-user="{{ user.pk }}" data-sound-feed="{% url 'sound_notifications_feed' %}" data-mouse-image="{% static 'img/rat-brand.png' %}"{% endif %}>
+<body{% if user.is_authenticated %} data-chat-notification-settings="{% url 'chat_notification_settings' %}" data-chat-notification-events="{% url 'chat_notification_events' %}" data-chat-user="{{ user.pk }}" data-sound-user="{{ user.pk }}" data-sound-feed="{% url 'sound_notifications_feed' %}" data-mouse-wallet="{% url 'mouse_wallet' %}" data-mouse-image="{% static 'img/rat-brand.png' %}"{% endif %}>
 <header class="topbar" data-site-header>
   <a class="brand" href="{% url 'home' %}" aria-label="RaTracker — главная">
     <img class="brand-rat" src="{% static 'img/rat-brand.png' %}" alt="">
@@ -66,8 +68,9 @@
     <a href="{% url 'calendar' %}" class="{% if request.resolver_match.url_name == 'calendar' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'calendar' %}aria-current="page"{% endif %}>Календарь</a>
     {% if is_manager %}<a href="{% url 'workload_timeline' %}" class="{% if request.resolver_match.url_name == 'workload_timeline' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'workload_timeline' %}aria-current="page"{% endif %}>Загрузка</a>{% endif %}
     <details class="nav-dropdown" data-menu>
-      <summary class="nav-menu-trigger{% if request.resolver_match.url_name == 'analytics' or request.resolver_match.url_name == 'activity_feed' or request.resolver_match.url_name == 'review_queue' or request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'template_list' %} is-current{% endif %}">Ещё</summary>
+      <summary class="nav-menu-trigger{% if request.resolver_match.url_name == 'analytics' or request.resolver_match.url_name == 'activity_feed' or request.resolver_match.url_name == 'review_queue' or request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'template_list' or request.resolver_match.url_name == 'roulette_topics' or request.resolver_match.url_name == 'roulette_topic' %} is-current{% endif %}">Ещё</summary>
       <div class="dropdown-panel" role="group" aria-label="Дополнительные разделы">
+        <a href="{% url 'roulette_topics' %}">Рулетка</a>
         {% if is_manager %}
           <a href="{% url 'review_queue' %}">Проверка{% if pending_review_count %} <span class="badge">{{ pending_review_count }}</span>{% endif %}</a>
           <a href="{% url 'analytics' %}">Аналитика</a>
@@ -77,7 +80,6 @@
           <a href="{% url 'workload_guide' %}">Как считается нагрузка</a>
         {% else %}
           <a href="{% url 'notifications' %}">Уведомления</a>
-          <a href="{% url 'workload_guide' %}">Как считается нагрузка</a>
         {% endif %}
       </div>
     </details>

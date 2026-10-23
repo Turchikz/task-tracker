@@ -24,6 +24,7 @@
     <span><i class="calendar-legend-box calendar-legend-holiday"></i> Праздник / дополнительный выходной</span>
     <span><i class="calendar-legend-box calendar-legend-working"></i> Рабочий выходной по переносу</span>
     <span><i class="calendar-legend-box calendar-legend-today"></i> Сегодня</span>
+    <span><i class="calendar-legend-box calendar-legend-absence"></i> Отсутствует</span>
   </div>
 </div>
 
@@ -36,6 +37,7 @@
     <div class="agenda-day{% if day.date == today %} is-today{% endif %}">
       <div class="agenda-date"><strong>{{ day.date|date:'j E, D' }}</strong>{% if day.is_holiday and day.holiday_name %}<small>{{ day.holiday_name }}</small>{% endif %}</div>
       <div class="agenda-tasks">{% for task in day.tasks %}<a href="{% url 'task_detail' task.pk %}" class="agenda-task"><strong>{{ task.title }}</strong><span>{{ task.get_status_display }} · {{ task.get_priority_display }}</span></a>{% empty %}<span class="muted">Нет задач</span>{% endfor %}</div>
+      {% if day.absences %}<div class="calendar-absences calendar-absences-agenda" aria-label="Отсутствующие сотрудники">{% for absence in day.absences %}<span class="calendar-absence" title="Отсутствует с {{ absence.start_date|date:'d.m.Y' }} по {{ absence.end_date|date:'d.m.Y' }}">{{ absence.user.get_full_name|default:absence.user.username }}</span>{% endfor %}</div>{% endif %}
     </div>
   {% endif %}{% endfor %}{% endfor %}
 </section>
@@ -63,6 +65,7 @@
             {% endif %}
           </div>
           {% if day.is_holiday and day.holiday_name %}<div class="calendar-holiday-name">{{ day.holiday_name }}</div>{% endif %}
+          {% if day.absences %}<div class="calendar-absences" aria-label="Отсутствующие сотрудники">{% for absence in day.absences %}<span class="calendar-absence" title="Отсутствует с {{ absence.start_date|date:'d.m.Y' }} по {{ absence.end_date|date:'d.m.Y' }}">{{ absence.user.get_full_name|default:absence.user.username }}</span>{% endfor %}</div>{% endif %}
           {% for task in day.tasks %}
             <a class="calendar-task {{ task.deadline_state }}" href="{% url 'task_detail' task.pk %}" title="{{ task.get_priority_display }} / {{ task.team_names }}">{{ task.title }}</a>
           {% endfor %}

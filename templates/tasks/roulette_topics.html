@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Рулетка — RaTracker{% endblock %}
+{% block content %}
+<div class="roulette-page">
+  <header class="roulette-heading">
+    <div><span class="roulette-eyebrow">Команда RaTracker</span><h1>Рулетка</h1><p class="muted">Отдельные розыгрыши для командировок, мероприятий и других тем. Итоги доступны всей команде.</p></div>
+    <div class="roulette-symbol" aria-hidden="true">✦</div>
+  </header>
+  {% if is_manager %}
+  <section class="roulette-panel roulette-create">
+    <div><h2>Новая тема</h2><p class="muted">Например, «Командировка в ноябре». У каждой темы своя история результатов.</p></div>
+    <form method="post" action="{% url 'roulette_create' %}" class="roulette-create-form">{% csrf_token %}
+      <label>Название темы<input name="title" maxlength="120" minlength="3" placeholder="Командировка" required></label>
+      <label>Сколько человек выбрать<input name="winner_count" type="number" min="1" max="20" value="3" required></label>
+      <button type="submit" class="btn primary">Создать рулетку</button>
+    </form>
+  </section>
+  {% endif %}
+  <section class="roulette-topics"><h2>Темы</h2>
+    <div class="roulette-topic-grid">
+      {% for topic in topics %}
+      <a class="roulette-topic-card" href="{% url 'roulette_topic' topic.pk %}">
+        <span class="roulette-topic-icon" aria-hidden="true">✦</span>
+        <strong>{{ topic.title }}</strong>
+        <span class="muted">Выбрать: {{ topic.winner_count }} · Розыгрышей: {{ topic.draws.count }}</span>
+        <span class="roulette-topic-arrow" aria-hidden="true">↗</span>
+      </a>
+      {% empty %}
+      <p class="roulette-empty">Пока нет тем для розыгрыша.{% if is_manager %} Создайте первую выше.{% endif %}</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

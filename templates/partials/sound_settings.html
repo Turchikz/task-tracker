@@ -1,1 +1,21 @@
-<section class="sound-settings-panel" id="sound-settings" hidden aria-label="Настройки звуков"><strong>Звуки RaTracker</strong><p class="muted">По умолчанию выключены. Настройки сохраняются отдельно для каждого пользователя в этом браузере.</p><label>Уведомления <input type="checkbox" name="notifications"></label><label>Действия и пасхалки <input type="checkbox" name="effects"></label><label>Шаги мышки <input type="checkbox" name="footsteps"></label><label>Громкость <input type="range" name="volume" min="0" max="100" step="5"><span data-volume-value>25%</span></label><div class="actions"><button class="btn secondary" type="button" data-sound-preview>Проверить</button><button class="btn secondary" type="button" data-sound-close>Закрыть</button></div></section>
+<section class="sound-settings-panel" id="sound-settings" hidden aria-label="Настройки звуков">
+  <strong>Звуки RaTracker</strong>
+  <p class="muted">По умолчанию выключены. Настройки звука сохраняются в этом браузере.</p>
+  <label>Уведомления <input type="checkbox" name="notifications"></label>
+  <label>Действия и пасхалки <input type="checkbox" name="effects"></label>
+  <label>Шаги мышки <input type="checkbox" name="footsteps"></label>
+  <label>Громкость <input type="range" name="volume" min="0" max="100" step="5"><span data-volume-value>25%</span></label>
+  <p class="mouse-collection" aria-live="polite">Сырная копилка: 🧀 <strong data-cheese-count>0</strong>
+    <small data-cheese-title>Начинающий мышелов</small>
+    <small>Поймано: <span data-mouse-catches>0</span> · Скорость: +<span data-mouse-speed>0</span>%</small>
+    <small data-mouse-sync>Синхронизация…</small>
+  </p>
+  <div class="mouse-shop" aria-label="Сырная лавка">
+    <strong>Сырная лавка</strong>
+    <p class="muted">Купленные вещи остаются у мышки. Цвета меняются случайно при каждом появлении.</p>
+    <button class="btn secondary" type="button" data-buy-hat disabled>Купить шапку — 5 🧀</button>
+    <button class="btn secondary" type="button" data-buy-scarf disabled>Купить шарфик — 8 🧀</button>
+    <small data-cheese-feedback role="status"></small>
+  </div>
+  <div class="actions"><button class="btn secondary" type="button" data-sound-preview>Проверить</button><button class="btn secondary" type="button" data-sound-close>Закрыть</button></div>
+</section>

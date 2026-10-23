@@ -19,10 +19,11 @@
   <button type="button" class="chat-more" id="chat-more" hidden>Показать предыдущие сообщения</button>
   <div id="chat-reply" class="chat-reply" hidden><span id="chat-reply-label"></span><button type="button" id="chat-reply-cancel" aria-label="Отменить ответ">×</button></div>
   <div id="chat-mentions" class="chat-mentions" hidden></div>
-  <div id="chat-emojis" class="chat-emojis" hidden></div>
+  <div id="chat-emojis" class="chat-emojis" hidden aria-label="Выбор эмодзи"></div>
   <form id="chat-form" class="chat-form"><button type="button" id="chat-emoji-button" title="Эмодзи" aria-label="Эмодзи">☺</button><textarea id="chat-input" rows="2" maxlength="2000" placeholder="Сообщение… Введите @ для упоминания" required></textarea><button type="submit" id="chat-send-button">Отправить</button></form>
   <p id="chat-error" class="chat-error" role="alert" hidden></p>
   <div id="chat-users" hidden>{% for employee in chat_users %}<span data-id="{{ employee.pk }}" data-name="{{ employee.get_full_name|default:employee.username }}"></span>{% endfor %}</div>
 </section>
-<script defer src="{% static 'js/chat.js' %}?v=099"></script>
+<script defer src="{% static 'js/chat.js' %}?v=0912"></script>
+<script defer src="{% static 'js/chat_emoji_picker.js' %}?v=0912"></script>
 {% endblock %}

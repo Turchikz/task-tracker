@@ -33,6 +33,7 @@
     document.documentElement.dataset.theme = next;
     try { localStorage.setItem(storageKey, next); } catch (_) { /* Private mode */ }
     syncButton();
+    document.dispatchEvent(new CustomEvent('ratracker:theme-changed', { detail: { theme: next } }));
 
     button.classList.remove('is-pulling');
     // Restart the recoil animation for consecutive interactions.

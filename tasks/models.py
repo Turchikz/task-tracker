@@ -576,6 +576,12 @@ class FeatureIdea(models.Model):
         return round(100 * self.yes_votes / total, 1) if total else 0
 
     @property
+    def vote_ratio_percent(self):
+        """Share of 'yes' among votes cast (independent of the 80% quorum)."""
+        yes, no = self.yes_votes, self.no_votes
+        return round(100 * yes / (yes + no), 1) if yes + no else 0
+
+    @property
     def threshold(self):
         return math.ceil(self.electorate_size * 0.8)
 
@@ -627,3 +633,49 @@ class ChatNotificationSettings(models.Model):
     sound = models.BooleanField(default=True)
     mentions = models.BooleanField(default=True)
     volume = models.PositiveSmallIntegerField(default=25, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+
+class MouseWallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="mouse_wallet")
+    cheese = models.PositiveIntegerField(default=0)
+    earned = models.PositiveIntegerField(default=0)
+    catches = models.PositiveIntegerField(default=0)
+    hat = models.BooleanField(default=False)
+    scarf = models.BooleanField(default=False)
+    legacy_imported = models.BooleanField(default=False)
+
+
+class MouseWalletEvent(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mouse_wallet_events")
+    event_id = models.UUIDField()
+    action = models.CharField(max_length=12)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["user", "event_id"], name="unique_mouse_wallet_event")]
+
+
+class RouletteTopic(models.Model):
+    title = models.CharField("Тема", max_length=120, unique=True)
+    winner_count = models.PositiveSmallIntegerField("Сколько выбрать", default=3)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="roulette_topics")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+
+    def __str__(self):
+        return self.title
+
+
+class RouletteDraw(models.Model):
+    topic = models.ForeignKey(RouletteTopic, on_delete=models.PROTECT, related_name="draws")
+    launched_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="roulette_draws")
+    request_id = models.UUIDField(unique=True)
+    participants = models.JSONField(default=list)
+    excluded = models.JSONField(default=list)
+    winners = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]

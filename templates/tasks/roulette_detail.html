@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.title }} — Рулетка RaTracker{% endblock %}
+{% block content %}
+<div class="roulette-page" data-roulette-page data-latest-id="{{ latest.pk|default:'' }}" data-status-url="{% url 'roulette_topic' topic.pk %}?status=1">
+  <a class="roulette-back" href="{% url 'roulette_topics' %}">← Все темы</a>
+  <header class="roulette-heading"><div><span class="roulette-eyebrow">Рулетка · {{ topic.winner_count }} чел.</span><h1>{{ topic.title }}</h1><p class="muted">Результаты и история видны всем сотрудникам.</p></div><div class="roulette-symbol" aria-hidden="true">✦</div></header>
+  <div class="roulette-layout">
+    <section class="roulette-panel roulette-stage" aria-label="Рулетка и результат">
+      <div class="roulette-wheel-wrap"><div class="roulette-pointer" aria-hidden="true"></div><div class="roulette-wheel" data-wheel aria-hidden="true"><div class="roulette-wheel-center">Ra</div></div></div>
+      <p class="roulette-stage-message" data-stage-message aria-live="polite">{% if latest %}Последний розыгрыш · {{ latest.created_at|date:"d.m.Y H:i" }}{% else %}Ожидаем первого розыгрыша{% endif %}</p>
+      <div class="roulette-live-winners" data-live-winners aria-live="polite"></div>
+      {% if latest %}
+      <div class="roulette-last-result"><span class="roulette-eyebrow">Последний результат</span><ol>{% for person in latest.winners %}<li>{{ person.name }}</li>{% endfor %}</ol></div>
+      {{ latest.participants|json_script:"roulette-last-participants" }}
+      {% endif %}
+    </section>
+    <div class="roulette-side">
+      {% if is_manager %}
+      <section class="roulette-panel">
+        <h2>Подготовка розыгрыша</h2><p class="muted">Выберите сотрудников, которые не участвуют сейчас. После запуска состав и результат сохранятся в истории.</p>
+        <form method="post" action="{% url 'roulette_draw' topic.pk %}" data-roulette-form>{% csrf_token %}<input type="hidden" name="request_id" value="{{ request_id }}">
+          <div class="roulette-pool-head"><strong>Сотрудники</strong><span data-pool-count></span></div>
+          <div class="roulette-pool">
+            {% for employee in employees %}
+            <label class="roulette-person"><input type="checkbox" name="exclude" value="{{ employee.pk }}" data-name="{{ employee.get_full_name|default:employee.username }}"><span>{{ employee.get_full_name|default:employee.username }}</span><small>Исключить</small></label>
+            {% empty %}<p class="muted">Активных сотрудников нет.</p>{% endfor %}
+          </div>
+          <p class="roulette-form-error" data-roulette-error role="alert" hidden></p>
+          <button class="btn primary roulette-spin-button" type="submit" data-spin-button>Крутить · выбрать {{ topic.winner_count }}</button>
+        </form>
+      </section>
+      {% else %}
+      <section class="roulette-panel"><h2>Как это работает</h2><p>Руководитель выбирает тему и запускает розыгрыш среди активных сотрудников. При необходимости перед запуском он исключает участников. Итоги и состав остаются в истории этой темы.</p></section>
+      {% endif %}
+    </div>
+  </div>
+  <section class="roulette-history"><h2>История темы</h2>
+    {% for draw in draws %}<article class="roulette-panel roulette-history-card">
+      <div><strong>{{ draw.created_at|date:"d.m.Y H:i" }}</strong><span class="muted"> · {{ draw.launched_by.get_full_name|default:draw.launched_by.username }}</span></div>
+      <ol class="roulette-history-winners">{% for person in draw.winners %}<li>{{ person.name }}</li>{% endfor %}</ol>
+      <details><summary>Состав розыгрыша · {{ draw.participants|length }} участвовали, {{ draw.excluded|length }} исключены</summary><div class="roulette-history-roster"><p><strong>Участвовали:</strong> {% for person in draw.participants %}{{ person.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p><p><strong>Исключены:</strong> {% for person in draw.excluded %}{{ person.name }}{% if not forloop.last %}, {% endif %}{% empty %}никто{% endfor %}</p></div></details>
+    </article>{% empty %}<p class="roulette-empty">Розыгрышей пока не было.</p>{% endfor %}
+    {% if draws.has_other_pages %}<nav class="roulette-pagination" aria-label="Страницы истории">
+      {% if draws.has_previous %}<a href="?page={{ draws.previous_page_number }}">← Новее</a>{% endif %}
+      <span>Страница {{ draws.number }} из {{ draws.paginator.num_pages }}</span>
+      {% if draws.has_next %}<a href="?page={{ draws.next_page_number }}">Раньше →</a>{% endif %}
+    </nav>{% endif %}
+  </section>
+</div>
+{% endblock %}
