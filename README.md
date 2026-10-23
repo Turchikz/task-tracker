@@ -113,6 +113,8 @@ curl http://127.0.0.1:8081/health/
 /workload/         загрузка сотрудников
 /analytics/        аналитика
 /activity/         история активности
+/roulette/         рулетка по темам
+/important-files/  важные файлы отдела
 /notifications/    уведомления
 /admin/            Django Admin
 /health/           healthcheck

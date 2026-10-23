@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from .models import Notification, Task
 from .permissions import is_manager
+from .project_version import __version__
 
 
 def tasktracker_context(request):
@@ -56,6 +57,7 @@ def tasktracker_context(request):
             & ~Q(task__responsible_manager=request.user)
         )
     return {
+        "app_version": __version__,
         "is_manager": manager,
         "recent_notifications": list(recent[:7]),
         "unread_notifications": unread.count(),

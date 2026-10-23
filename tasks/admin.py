@@ -13,8 +13,34 @@ from .models import (
     TaskMemberProgress,
     TaskTemplate,
     WorkCalendarDay,
+    RouletteTopic,
 )
 from .permissions import assignable_users, manager_users
+
+
+@admin.register(RouletteTopic)
+class RouletteTopicAdmin(admin.ModelAdmin):
+    list_display = ("title", "winner_count", "draw_count", "created_by", "created_at")
+    search_fields = ("title", "created_by__username")
+    readonly_fields = ("created_by", "created_at")
+    list_select_related = ("created_by",)
+    actions = None  # Delete topics one at a time with their full history visible in confirmation.
+    delete_confirmation_template = "admin/tasks/roulettetopic/delete_confirmation.html"
+
+    @admin.display(description="Розыгрышей")
+    def draw_count(self, obj):
+        return obj.draws.count()
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def delete_view(self, request, object_id, extra_context=None):
+        topic = self.get_object(request, object_id)
+        extra_context = {**(extra_context or {}), "roulette_draw_count": topic.draws.count() if topic else 0}
+        return super().delete_view(request, object_id, extra_context=extra_context)
 
 
 @admin.register(Task)

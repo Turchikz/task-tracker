@@ -22,7 +22,7 @@
       <a class="roulette-topic-card" href="{% url 'roulette_topic' topic.pk %}">
         <span class="roulette-topic-icon" aria-hidden="true">✦</span>
         <strong>{{ topic.title }}</strong>
-        <span class="muted">Выбрать: {{ topic.winner_count }} · Розыгрышей: {{ topic.draws.count }}</span>
+        <span class="muted">Выбрать: {{ topic.winner_count }} · Розыгрышей: {{ topic.visible_draw_count }}</span>
         <span class="roulette-topic-arrow" aria-hidden="true">↗</span>
       </a>
       {% empty %}

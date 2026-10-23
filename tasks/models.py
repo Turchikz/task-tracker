@@ -18,6 +18,11 @@ def task_image_upload_to(instance, filename):
     return f"task_images/{instance.task_id}/{uuid4().hex}{extension}"
 
 
+def important_file_upload_to(instance, filename):
+    extension = Path(filename).suffix.lower()
+    return f"important_files/{instance.document_id}/{uuid4().hex}{extension}"
+
+
 class Task(models.Model):
     class Status(models.TextChoices):
         NEW = "new", "Новая"
@@ -669,12 +674,51 @@ class RouletteTopic(models.Model):
 
 
 class RouletteDraw(models.Model):
-    topic = models.ForeignKey(RouletteTopic, on_delete=models.PROTECT, related_name="draws")
+    topic = models.ForeignKey(RouletteTopic, on_delete=models.CASCADE, related_name="draws")
     launched_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="roulette_draws")
     request_id = models.UUIDField(unique=True)
     participants = models.JSONField(default=list)
     excluded = models.JSONField(default=list)
     winners = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="removed_roulette_draws")
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+
+    def __str__(self):
+        return f"{self.topic.title} · {self.created_at:%d.%m.%Y %H:%M}"
+
+
+class ImportantFile(models.Model):
+    class Category(models.TextChoices):
+        REGULATIONS = "regulations", "Регламенты"
+        FORMS = "forms", "Формы и шаблоны"
+        GUIDES = "guides", "Инструкции"
+        OTHER = "other", "Прочее"
+
+    title = models.CharField("Название", max_length=160)
+    description = models.TextField("Описание", max_length=1000, blank=True)
+    category = models.CharField("Категория", max_length=16, choices=Category.choices, default=Category.OTHER)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="important_files_created")
+    updated_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="important_files_updated")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        ordering = ["-updated_at", "-pk"]
+
+    def __str__(self):
+        return self.title
+
+
+class ImportantFileRevision(models.Model):
+    document = models.ForeignKey(ImportantFile, on_delete=models.PROTECT, related_name="versions")
+    file = models.FileField(upload_to=important_file_upload_to)
+    original_name = models.CharField(max_length=255)
+    size_bytes = models.PositiveBigIntegerField()
+    uploaded_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="important_file_revisions")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

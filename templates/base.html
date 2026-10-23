@@ -45,8 +45,9 @@
   <script defer src="{% static 'js/chat_badge.js' %}?v=099"></script>
   <script defer src="{% static 'js/chat_notifications.js' %}?v=0910"></script>
   <link rel="stylesheet" href="{% static 'css/release096.css' %}?v=096">
-  <link rel="stylesheet" href="{% static 'css/roulette.css' %}?v=0916">
-  <script defer src="{% static 'js/roulette.js' %}?v=0916"></script>
+  <link rel="stylesheet" href="{% static 'css/roulette.css' %}?v=0917">
+  <script defer src="{% static 'js/roulette.js' %}?v=0917"></script>
+  <link rel="stylesheet" href="{% static 'css/important_files.css' %}?v=0918">
 </head>
 <body{% if user.is_authenticated %} data-chat-notification-settings="{% url 'chat_notification_settings' %}" data-chat-notification-events="{% url 'chat_notification_events' %}" data-chat-user="{{ user.pk }}" data-sound-user="{{ user.pk }}" data-sound-feed="{% url 'sound_notifications_feed' %}" data-mouse-wallet="{% url 'mouse_wallet' %}" data-mouse-image="{% static 'img/rat-brand.png' %}"{% endif %}>
 <header class="topbar" data-site-header>
@@ -68,9 +69,10 @@
     <a href="{% url 'calendar' %}" class="{% if request.resolver_match.url_name == 'calendar' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'calendar' %}aria-current="page"{% endif %}>Календарь</a>
     {% if is_manager %}<a href="{% url 'workload_timeline' %}" class="{% if request.resolver_match.url_name == 'workload_timeline' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'workload_timeline' %}aria-current="page"{% endif %}>Загрузка</a>{% endif %}
     <details class="nav-dropdown" data-menu>
-      <summary class="nav-menu-trigger{% if request.resolver_match.url_name == 'analytics' or request.resolver_match.url_name == 'activity_feed' or request.resolver_match.url_name == 'review_queue' or request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'template_list' or request.resolver_match.url_name == 'roulette_topics' or request.resolver_match.url_name == 'roulette_topic' %} is-current{% endif %}">Ещё</summary>
+      <summary class="nav-menu-trigger{% if request.resolver_match.url_name == 'analytics' or request.resolver_match.url_name == 'activity_feed' or request.resolver_match.url_name == 'review_queue' or request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'template_list' or request.resolver_match.url_name == 'roulette_topics' or request.resolver_match.url_name == 'roulette_topic' or request.resolver_match.url_name == 'important_files' or request.resolver_match.url_name == 'important_file_detail' or request.resolver_match.url_name == 'important_file_create' or request.resolver_match.url_name == 'important_file_edit' %} is-current{% endif %}">Ещё</summary>
       <div class="dropdown-panel" role="group" aria-label="Дополнительные разделы">
         <a href="{% url 'roulette_topics' %}">Рулетка</a>
+        <a href="{% url 'important_files' %}">Важные файлы</a>
         {% if is_manager %}
           <a href="{% url 'review_queue' %}">Проверка{% if pending_review_count %} <span class="badge">{{ pending_review_count }}</span>{% endif %}</a>
           <a href="{% url 'analytics' %}">Аналитика</a>
@@ -101,6 +103,7 @@
         {% if user.is_superuser %}<a href="{% url 'backup_monitor' %}">Резервные копии</a>{% endif %}
         <button type="button" class="dropdown-action" data-theme-menu-toggle>Переключить тему</button>
         <div class="sound-settings-wrapper"><button type="button" class="dropdown-action" data-sound-open aria-expanded="false">Звуки и пасхалки</button>{% include 'partials/sound_settings.html' %}</div>
+        <span class="profile-version">RaTracker v{{ app_version }}</span>
         <form method="post" action="{% url 'logout' %}" class="profile-logout-form">
           {% csrf_token %}
           <button class="logout-action" type="submit" title="Выйти из RaTracker">

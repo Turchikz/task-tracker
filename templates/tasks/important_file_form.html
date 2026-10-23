@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{% if document %}Обновить файл{% else %}Добавить файл{% endif %} — RaTracker{% endblock %}
+{% block content %}
+<div class="files-page files-form-page"><a href="{% if document %}{% url 'important_file_detail' document.pk %}{% else %}{% url 'important_files' %}{% endif %}" class="files-back">← Назад к файлам</a><h1>{% if document %}Обновить файл{% else %}Новый файл{% endif %}</h1>
+  <form method="post" enctype="multipart/form-data" class="files-panel files-edit-form">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="files-errors">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}<label>{{ field.label }}{% if field.field.required %} *{% endif %}{{ field }}{% if field.errors %}<span class="files-errors">{{ field.errors }}</span>{% endif %}</label>{% endfor %}
+    <p class="muted">PDF, Word, Excel, ODT/ODS, TXT/CSV или JPG/PNG · до 20 МБ.{% if document %} Если оставить поле файла пустым, обновятся только название, категория или описание.{% endif %}</p>
+    <button class="btn primary" type="submit">{% if document %}Сохранить изменения{% else %}Добавить файл{% endif %}</button>
+  </form>
+</div>
+{% endblock %}

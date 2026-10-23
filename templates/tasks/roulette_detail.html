@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ topic.title }} — Рулетка RaTracker{% endblock %}
 {% block content %}
-<div class="roulette-page" data-roulette-page data-latest-id="{{ latest.pk|default:'' }}" data-status-url="{% url 'roulette_topic' topic.pk %}?status=1">
+<div class="roulette-page" data-roulette-page data-latest-id="{{ latest.pk|default:'' }}" data-visible-count="{{ visible_count }}" data-status-url="{% url 'roulette_topic' topic.pk %}?status=1">
   <a class="roulette-back" href="{% url 'roulette_topics' %}">← Все темы</a>
   <header class="roulette-heading"><div><span class="roulette-eyebrow">Рулетка · {{ topic.winner_count }} чел.</span><h1>{{ topic.title }}</h1><p class="muted">Результаты и история видны всем сотрудникам.</p></div><div class="roulette-symbol" aria-hidden="true">✦</div></header>
   <div class="roulette-layout">
@@ -39,6 +39,7 @@
       <div><strong>{{ draw.created_at|date:"d.m.Y H:i" }}</strong><span class="muted"> · {{ draw.launched_by.get_full_name|default:draw.launched_by.username }}</span></div>
       <ol class="roulette-history-winners">{% for person in draw.winners %}<li>{{ person.name }}</li>{% endfor %}</ol>
       <details><summary>Состав розыгрыша · {{ draw.participants|length }} участвовали, {{ draw.excluded|length }} исключены</summary><div class="roulette-history-roster"><p><strong>Участвовали:</strong> {% for person in draw.participants %}{{ person.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p><p><strong>Исключены:</strong> {% for person in draw.excluded %}{{ person.name }}{% if not forloop.last %}, {% endif %}{% empty %}никто{% endfor %}</p></div></details>
+      {% if user.is_superuser %}<form class="roulette-history-delete" method="post" action="{% url 'roulette_draw_delete' topic.pk draw.pk %}" data-confirm-delete>{% csrf_token %}<button type="submit">Удалить результат</button></form>{% endif %}
     </article>{% empty %}<p class="roulette-empty">Розыгрышей пока не было.</p>{% endfor %}
     {% if draws.has_other_pages %}<nav class="roulette-pagination" aria-label="Страницы истории">
       {% if draws.has_previous %}<a href="?page={{ draws.previous_page_number }}">← Новее</a>{% endif %}
@@ -46,5 +47,19 @@
       {% if draws.has_next %}<a href="?page={{ draws.next_page_number }}">Раньше →</a>{% endif %}
     </nav>{% endif %}
   </section>
+  {% if user.is_superuser and deleted_draws.paginator.count %}
+  <section class="roulette-removed"><details><summary>Удалённые результаты · {{ deleted_draws.paginator.count }}</summary>
+    {% for draw in deleted_draws %}<article class="roulette-panel roulette-history-card">
+      <div><strong>{{ draw.created_at|date:"d.m.Y H:i" }}</strong><span class="muted"> · удалил {{ draw.deleted_by.get_full_name|default:draw.deleted_by.username|default:"администратор" }} {{ draw.deleted_at|date:"d.m.Y H:i" }}</span></div>
+      <ol class="roulette-history-winners">{% for person in draw.winners %}<li>{{ person.name }}</li>{% endfor %}</ol>
+      <form class="roulette-history-delete" method="post" action="{% url 'roulette_draw_restore' topic.pk draw.pk %}">{% csrf_token %}<button type="submit">Восстановить результат</button></form>
+    </article>{% endfor %}
+    {% if deleted_draws.has_other_pages %}<nav class="roulette-pagination" aria-label="Страницы удалённых результатов">
+      {% if deleted_draws.has_previous %}<a href="?deleted_page={{ deleted_draws.previous_page_number }}">← Новее</a>{% endif %}
+      <span>Страница {{ deleted_draws.number }} из {{ deleted_draws.paginator.num_pages }}</span>
+      {% if deleted_draws.has_next %}<a href="?deleted_page={{ deleted_draws.next_page_number }}">Раньше →</a>{% endif %}
+    </nav>{% endif %}
+  </details></section>
+  {% endif %}
 </div>
 {% endblock %}

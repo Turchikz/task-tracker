@@ -1,0 +1,5 @@
+{% extends "admin/delete_confirmation.html" %}
+{% block content %}
+<p><strong>Удаляется вся тема рулетки. Вместе с ней безвозвратно удалятся {{ roulette_draw_count }} розыгрышей, включая скрытые результаты.</strong></p>
+{{ block.super }}
+{% endblock %}

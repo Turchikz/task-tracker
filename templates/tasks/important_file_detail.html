@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ document.title }} — Важные файлы{% endblock %}
+{% block content %}
+<div class="files-page files-detail"><a href="{% url 'important_files' %}" class="files-back">← Важные файлы</a>
+  <header class="files-heading"><div><span class="files-eyebrow">{{ document.get_category_display }}</span><h1>{{ document.title }}</h1><p class="muted">Последнее обновление: <time datetime="{{ document.updated_at|date:'c' }}">{{ document.updated_at|date:"d.m.Y H:i" }}</time> · {{ document.updated_by.get_full_name|default:document.updated_by.username }}</p></div>{% if is_manager %}<a class="btn secondary" href="{% url 'important_file_edit' document.pk %}">Обновить файл</a>{% endif %}</header>
+  {% if document.description %}<div class="files-panel files-detail-description">{{ document.description|linebreaksbr }}</div>{% endif %}
+  <section class="files-panel"><h2>Текущий файл</h2>{% with current=versions.0 %}<div class="files-current"><div class="files-type-icon" aria-hidden="true">▤</div><div><strong>{{ current.original_name }}</strong><p class="muted">{{ current.size_bytes|filesizeformat }} · загружен {{ current.created_at|date:"d.m.Y H:i" }}</p></div><a class="btn primary" href="{% url 'important_file_download' document.pk current.pk %}">Скачать</a></div>{% endwith %}</section>
+  {% if versions|length > 1 %}<section class="files-panel"><h2>Предыдущие версии</h2><p class="muted">При обновлении документа старый файл остаётся доступен.</p><div class="files-versions">{% for version in versions %}{% if not forloop.first %}<div class="files-version"><div><strong>{{ version.original_name }}</strong><span class="muted">{{ version.created_at|date:"d.m.Y H:i" }} · {{ version.uploaded_by.get_full_name|default:version.uploaded_by.username }} · {{ version.size_bytes|filesizeformat }}</span></div><a href="{% url 'important_file_download' document.pk version.pk %}">Скачать</a></div>{% endif %}{% endfor %}</div></section>{% endif %}
+</div>
+{% endblock %}

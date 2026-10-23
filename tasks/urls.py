@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, chat, mouse, roulette
+from . import views, chat, mouse, roulette, important_files
 
 urlpatterns = [
     path("chat/", chat.room, name="department_chat"),
@@ -20,6 +20,13 @@ urlpatterns = [
     path("roulette/new/", roulette.create_topic, name="roulette_create"),
     path("roulette/<int:pk>/", roulette.detail, name="roulette_topic"),
     path("roulette/<int:pk>/draw/", roulette.draw, name="roulette_draw"),
+    path("roulette/<int:pk>/results/<int:draw_pk>/delete/", roulette.delete_draw, name="roulette_draw_delete"),
+    path("roulette/<int:pk>/results/<int:draw_pk>/restore/", roulette.restore_draw, name="roulette_draw_restore"),
+    path("important-files/", important_files.index, name="important_files"),
+    path("important-files/new/", important_files.create, name="important_file_create"),
+    path("important-files/<int:pk>/", important_files.detail, name="important_file_detail"),
+    path("important-files/<int:pk>/edit/", important_files.edit, name="important_file_edit"),
+    path("important-files/<int:pk>/versions/<int:revision_pk>/download/", important_files.download, name="important_file_download"),
     path("health/", views.health, name="health"),
     path("", views.home, name="home"),
     path("tasks/", views.task_list, name="task_list"),

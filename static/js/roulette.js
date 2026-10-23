@@ -5,6 +5,9 @@ const form=page.querySelector('[data-roulette-form]'),wheel=page.querySelector('
 const palette=['#e5d8fb','#ffe7b3','#c8e9f3','#f7cdd7','#d6efdc','#e4dbfc','#ffe0b9','#cddff7'];
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let spinning=false;
+page.querySelectorAll('[data-confirm-delete]').forEach(form=>form.addEventListener('submit',event=>{
+ if(!window.confirm('Удалить этот результат из общей истории? Его можно будет восстановить.'))event.preventDefault();
+}));
 function paint(people){
  wheel.querySelectorAll('.roulette-wheel-label').forEach(node=>node.remove());
  if(!people.length){wheel.style.background='conic-gradient(#eadfff,#fff0cd,#cde9f4,#eadfff)';return}
@@ -74,7 +77,7 @@ if(page.dataset.statusUrl)window.setInterval(async()=>{
   const response=await fetch(page.dataset.statusUrl,{credentials:'same-origin',cache:'no-store'});
   if(!response.ok)return;
   const result=await response.json();
-  if(result.latest_id&&String(result.latest_id)!==page.dataset.latestId)window.location.reload();
+  if(String(result.latest_id||'')!==page.dataset.latestId||String(result.visible_count)!==page.dataset.visibleCount)window.location.reload();
  }catch(_){/* The page will refresh on the next successful check. */}
 },10000);
 })();

@@ -5,8 +5,10 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
+from django.db.models import Count, Q
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import RouletteDraw, RouletteTopic
@@ -20,7 +22,9 @@ def participant(user):
 @login_required
 def topics(request):
     return render(request, "tasks/roulette_topics.html", {
-        "topics": RouletteTopic.objects.select_related("created_by").all(),
+        "topics": RouletteTopic.objects.select_related("created_by").annotate(
+            visible_draw_count=Count("draws", filter=Q(draws__deleted_at__isnull=True))
+        ),
     })
 
 
@@ -48,14 +52,18 @@ def create_topic(request):
 @login_required
 def detail(request, pk):
     topic = get_object_or_404(RouletteTopic, pk=pk)
-    latest = topic.draws.select_related("launched_by").first()
+    visible = topic.draws.filter(deleted_at__isnull=True).select_related("launched_by")
+    latest = visible.first()
+    visible_count = visible.count()
     if request.GET.get("status") == "1":
-        return JsonResponse({"latest_id": latest.pk if latest else None}, headers={"Cache-Control": "no-store"})
+        return JsonResponse({"latest_id": latest.pk if latest else None, "visible_count": visible_count}, headers={"Cache-Control": "no-store"})
     return render(request, "tasks/roulette_detail.html", {
         "topic": topic,
         "employees": list(assignable_users()) if is_manager(request.user) else [],
         "latest": latest,
-        "draws": Paginator(topic.draws.select_related("launched_by"), 20).get_page(request.GET.get("page")),
+        "visible_count": visible_count,
+        "draws": Paginator(visible, 20).get_page(request.GET.get("page")),
+        "deleted_draws": Paginator(topic.draws.filter(deleted_at__isnull=False).select_related("deleted_by"), 20).get_page(request.GET.get("deleted_page")) if request.user.is_superuser else None,
         "request_id": uuid4(),
     })
 
@@ -89,6 +97,8 @@ def draw(request, pk):
         if existing:
             if existing.topic_id != topic.pk:
                 return error("Некорректный идентификатор розыгрыша.")
+            if existing.deleted_at:
+                return error("Этот результат удалён администратором. Обновите страницу.", status=409)
             result = existing
         else:
             employees = list(assignable_users())
@@ -111,4 +121,34 @@ def draw(request, pk):
             "winners": result.winners, "detail_url": request.path.rsplit("/draw/", 1)[0] + "/",
         })
     messages.success(request, "Розыгрыш завершён. Результат виден всем сотрудникам.")
+    return redirect("roulette_topic", pk=pk)
+
+
+@login_required
+@require_POST
+def delete_draw(request, pk, draw_pk):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Удалять результаты может только администратор.")
+    with transaction.atomic():
+        result = get_object_or_404(RouletteDraw.objects.select_for_update(), pk=draw_pk, topic_id=pk)
+        if result.deleted_at is None:
+            result.deleted_at = timezone.now()
+            result.deleted_by = request.user
+            result.save(update_fields=["deleted_at", "deleted_by"])
+    messages.success(request, "Результат убран из общей истории. Его можно восстановить.")
+    return redirect("roulette_topic", pk=pk)
+
+
+@login_required
+@require_POST
+def restore_draw(request, pk, draw_pk):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Восстанавливать результаты может только администратор.")
+    with transaction.atomic():
+        result = get_object_or_404(RouletteDraw.objects.select_for_update(), pk=draw_pk, topic_id=pk)
+        if result.deleted_at is not None:
+            result.deleted_at = None
+            result.deleted_by = None
+            result.save(update_fields=["deleted_at", "deleted_by"])
+    messages.success(request, "Результат снова доступен всем сотрудникам.")
     return redirect("roulette_topic", pk=pk)
