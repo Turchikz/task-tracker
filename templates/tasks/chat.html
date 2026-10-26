@@ -24,6 +24,6 @@
   <p id="chat-error" class="chat-error" role="alert" hidden></p>
   <div id="chat-users" hidden>{% for employee in chat_users %}<span data-id="{{ employee.pk }}" data-name="{{ employee.get_full_name|default:employee.username }}"></span>{% endfor %}</div>
 </section>
-<script defer src="{% static 'js/chat.js' %}?v=0912"></script>
-<script defer src="{% static 'js/chat_emoji_picker.js' %}?v=0912"></script>
+<script defer src="{% static 'js/chat.js' %}?v={{ app_version }}"></script>
+<script defer src="{% static 'js/chat_emoji_picker.js' %}?v={{ app_version }}"></script>
 {% endblock %}

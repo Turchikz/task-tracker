@@ -8,7 +8,7 @@
     {% endif %}
   </td>
   {% endif %}
-  <td><a class="task-title-link" href="{% url 'task_detail' task.pk %}" title="{{ task.title }}"><span class="task-id muted">#{{ task.pk }}</span> {{ task.title }}</a></td>
+  <td><a class="task-title-link" href="{% url 'task_detail' task.pk %}" title="{{ task.title }}"><span class="task-id muted">#{{ task.pk }}</span> {{ task.title }}</a>{% if task.tags.all %}<div class="task-tag-list">{% for tag in task.tags.all %}<span class="task-tag">{{ tag.name }}</span>{% endfor %}</div>{% endif %}</td>
   {% if is_manager %}
     <td><span class="employee-inline">{% include "partials/team_avatars.html" with task=task %}<span class="team-primary-label">{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</span></span></td>
     <td data-column="manager"><span class="employee-inline manager-inline"><span class="avatar-initials manager-avatar">{% if task.responsible_manager %}{{ task.responsible_manager.first_name|default:task.responsible_manager.username|slice:":1" }}{{ task.responsible_manager.last_name|slice:":1" }}{% else %}{{ task.created_by.first_name|default:task.created_by.username|slice:":1" }}{{ task.created_by.last_name|slice:":1" }}{% endif %}</span>{% if task.responsible_manager %}{{ task.responsible_manager.get_full_name|default:task.responsible_manager.username }}{% else %}{{ task.created_by.get_full_name|default:task.created_by.username }}{% endif %}</span></td>

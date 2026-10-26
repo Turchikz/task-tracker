@@ -85,7 +85,14 @@ PostgreSQL 17.
 tasks/
     models.py
     forms.py
-    views.py
+    views.py                 # health check and home routing
+    task_views.py            # task list/detail, search, filters
+    task_action_views.py     # workflow actions, handovers, comments, images
+    task_view_helpers.py     # shared task query, ownership and context helpers
+    team_views.py            # dashboard, calendar, workload, activity feed
+    department_views.py      # templates, notifications, absences, feature ideas
+    reporting_views.py       # analytics, XLSX export, backup monitoring
+    task_event_handlers.py   # task history and notification side effects
     urls.py
     services.py
     signals.py
@@ -100,6 +107,7 @@ tasks/
 Сущности приложения:
 
 - задачи;
+- проектные метки задач;
 - шаблоны;
 - уведомления;
 - комментарии;
@@ -107,22 +115,32 @@ tasks/
 - изображения;
 - отсутствия.
 
-### `views.py`
+### HTTP views
 
-HTTP endpoint'ы и orchestration прикладных операций.
+HTTP endpoint'ы разделены по назначению. `task_views.py` содержит списки задач,
+карточку, поиск и сохранённые фильтры. `task_action_views.py` содержит переходы
+статусов, передачи, комментарии и работу с изображениями. `team_views.py` содержит
+дашборд, календарь, загрузку и ленту активности. `department_views.py` содержит
+шаблоны, уведомления, отсутствия и идеи. `reporting_views.py` содержит аналитику,
+выгрузки и мониторинг резервных копий. `views.py` оставлен для health check и
+маршрутизации на домашнюю страницу.
+
+Общие выборки и контекст задач находятся в `task_view_helpers.py`; права
+проверяются на сервере в обработчиках и через `permissions.py`.
 
 
 ### Права на изменение задач
 
-Проверки прав на изменение задачи централизованы в `permissions.py` (`can_manage_task`) и применяются непосредственно в `views.py`. Отдельного слоя wrapper-view для Managers нет: это уменьшает дублирование HTTP-логики и риск расхождения проверок.
+Проверки прав на изменение задачи централизованы в `permissions.py` (`can_manage_task`) и применяются непосредственно в HTTP-обработчиках. Отдельного слоя wrapper-view для Managers нет: это уменьшает дублирование HTTP-логики и риск расхождения проверок.
 
 ### `services.py`
 
 Расчёт загрузки и другие операции, которые не должны находиться непосредственно в view.
 
-### `signals.py`
+### `signals.py` и обработчики событий
 
-Побочные действия при изменении задач:
+`signals.py` только связывает Django signals с обработчиками. Побочные действия
+при изменении задач находятся в `task_event_handlers.py`:
 
 - внутренние уведомления;
 - фиксация событий.

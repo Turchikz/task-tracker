@@ -1,6 +1,5 @@
 """Member readiness without changing the global task workflow."""
-from django.db.models import Q
-from .models import Task, TaskMemberProgress
+from .models import TaskMemberProgress
 
 
 def team_progress(task):

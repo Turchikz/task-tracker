@@ -31,3 +31,24 @@
 .ratracker-hat::after{content:"";position:absolute;left:-5px;bottom:-3px;width:39px;height:5px;background:var(--hat-color,#e11d48);border:2px solid #332b42;border-radius:6px}
 .ratracker-scarf{position:absolute;left:27px;top:39px;width:24px;height:9px;border:2px solid #332b42;border-radius:8px;background:var(--scarf-color,#2563eb);transform:rotate(-9deg);box-shadow:0 1px 1px #0005}
 .ratracker-scarf::after{content:"";position:absolute;left:3px;top:6px;width:8px;height:18px;background:var(--scarf-color,#2563eb);border:2px solid #332b42;border-radius:0 0 5px 5px;transform:rotate(18deg)}
+
+/* Catch milestones unlock cosmetic variants without affecting work progress. */
+.ratracker-runner.variant-cinnamon .ratracker-mouse-sprite{filter:sepia(.82) saturate(1.9) hue-rotate(330deg)}
+.ratracker-runner.variant-lavender .ratracker-mouse-sprite{filter:sepia(.35) saturate(1.65) hue-rotate(235deg)}
+.ratracker-runner.variant-midnight .ratracker-mouse-sprite{filter:sepia(.25) saturate(1.55) hue-rotate(175deg) brightness(.83)}
+.ratracker-runner.legendary .ratracker-mouse-sprite{filter:sepia(1) saturate(5) hue-rotate(350deg) drop-shadow(0 0 6px #fbbf24)}
+.ratracker-mouse-reaction{position:absolute;left:53px;top:0;z-index:3;font-size:21px;line-height:1;animation:mouse-reaction-pop .8s ease-out both}
+@keyframes mouse-reaction-pop{0%{opacity:0;transform:translateY(8px) scale(.7)}35%{opacity:1;transform:translateY(-7px) scale(1.08)}100%{opacity:0;transform:translateY(-15px) scale(.9)}}
+.ratracker-runner.reaction-peek .ratracker-mouse-sprite{animation:rat-sprite-six .55s steps(6) infinite,mouse-peek .8s ease-in-out 2}
+@keyframes mouse-peek{0%,100%{translate:0 0}50%{translate:0 -8px}}
+.ratracker-runner.reaction-escape .ratracker-mouse-sprite{filter:drop-shadow(0 0 5px #f59e0b)}
+.ratracker-crumb{position:fixed;z-index:60;pointer-events:none;user-select:none;font-size:13px;opacity:.8;animation:mouse-crumb-fade 1.5s ease-out forwards}
+@keyframes mouse-crumb-fade{to{opacity:0;transform:translateY(10px) scale(.65)}}
+.ratracker-glasses{position:absolute;left:36px;top:24px;width:25px;height:10px;border:2px solid #243044;border-radius:5px;background:#38bdf855;box-shadow:0 0 0 1px #fff8}
+.ratracker-glasses::before,.ratracker-glasses::after{content:"";position:absolute;top:2px;width:8px;height:6px;border:1px solid #243044;border-radius:3px;background:#38bdf888}
+.ratracker-glasses::before{left:-7px}.ratracker-glasses::after{right:-7px}
+.ratracker-vest{position:absolute;left:31px;top:42px;width:20px;height:17px;border:2px solid #332b42;border-radius:6px 6px 8px 8px;background:linear-gradient(90deg,#14b8a6 48%,#0f766e 49%);transform:rotate(-5deg)}
+.ratracker-bowtie{position:absolute;left:42px;top:39px;width:12px;height:9px;background:#e11d48;clip-path:polygon(0 0,50% 28%,100% 0,82% 100%,50% 72%,18% 100%);filter:drop-shadow(0 1px 1px #0008)}
+.mouse-unlocks{border-top:1px solid var(--border,#cbd5e1);padding-top:10px;font-size:12px}
+.mouse-unlocks p{margin:6px 0 10px;white-space:pre-line;line-height:1.65;font-size:11px;color:var(--text,#334155)}
+@media(prefers-reduced-motion:reduce){.ratracker-crumb,.ratracker-mouse-reaction{animation:none;display:none}}

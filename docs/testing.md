@@ -14,6 +14,19 @@
 pytest
 ```
 
+Frontend-синтаксис и smoke-тест интерфейса мышки:
+
+```bash
+node --check static/js/app.js
+node tests/test_mouse_ui.cjs
+```
+
+Для проверки всех локальных скриптов в PowerShell:
+
+```powershell
+Get-ChildItem static/js -Filter *.js | ForEach-Object { node --check $_.FullName }
+```
+
 Через Docker dev image, если pytest включён в образ:
 
 ```bash
@@ -84,5 +97,9 @@ python manage.py check --settings=config.settings_test
 python manage.py makemigrations --check --dry-run --settings=config.settings_test
 pytest
 ```
+
+CI и локальная проверка Django должны запускаться в окружении с той же версией
+Python, что и Docker image проекта (Python 3.13). Успешная компиляция Python-файлов
+не заменяет `manage.py check`, проверку миграций и pytest.
 
 Если любой шаг падает, production deployment не должен запускаться.

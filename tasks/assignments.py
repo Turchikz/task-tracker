@@ -3,7 +3,7 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from .models import Notification, Task, TaskEvent, TaskHandover
+from .models import Task, TaskEvent, TaskHandover
 from .permissions import assignable_users
 
 

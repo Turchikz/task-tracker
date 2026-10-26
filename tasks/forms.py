@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.db.models import Case, IntegerField, When
 from django.utils import timezone
 
@@ -9,6 +10,7 @@ from .models import (
     Task,
     TaskComment,
     TaskImage,
+    TaskTag,
     TaskTemplate,
 )
 from .permissions import assignable_users, manager_users
@@ -58,6 +60,16 @@ class WorkloadUserChoiceField(forms.ModelChoiceField):
 
 
 class TaskForm(forms.ModelForm):
+    tags = forms.CharField(
+        label="Метки / проект",
+        required=False,
+        widget=forms.TextInput(attrs={
+            "list": "task-tag-options",
+            "autocomplete": "off",
+            "placeholder": "Например: 1202.55 ООО Ачимгаз",
+        }),
+        help_text="Введите метку или выберите существующую. Несколько меток разделяйте запятыми; новая метка появится в списке после сохранения.",
+    )
     responsible_manager = FullNameUserChoiceField(
         queryset=User.objects.none(),
         label="Ответственный руководитель",
@@ -100,6 +112,10 @@ class TaskForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["start_date"].input_formats = ["%Y-%m-%d"]
         self.fields["due_date"].input_formats = ["%Y-%m-%d"]
+        if self.instance and self.instance.pk and not self.is_bound:
+            self.initial["tags"] = ", ".join(
+                self.instance.tags.values_list("name", flat=True)
+            )
         self.fields["responsible_manager"].queryset = manager_users()
 
         ranking = get_workload_ranking()
@@ -190,6 +206,37 @@ class TaskForm(forms.ModelForm):
             # A promoted co-worker cannot also remain listed among extras.
             cleaned["additional_assignees"] = extras.exclude(pk=lead.pk)
         return cleaned
+
+    def clean_tags(self):
+        raw = self.cleaned_data.get("tags", "")
+        names = []
+        seen = set()
+        for part in raw.replace(";", ",").split(","):
+            name = " ".join(part.split())
+            key = name.casefold()
+            if not name or key in seen:
+                continue
+            if len(name) > 80:
+                raise forms.ValidationError("Метка не может быть длиннее 80 символов.")
+            seen.add(key)
+            names.append(name)
+        if len(names) > 8:
+            raise forms.ValidationError("К одной задаче можно добавить не более 8 меток.")
+        return names
+
+    def _save_m2m(self):
+        super()._save_m2m()
+        if not self.instance.pk:
+            return
+        with transaction.atomic():
+            tags = []
+            for name in self.cleaned_data.get("tags", []):
+                tag, _ = TaskTag.objects.get_or_create(
+                    normalized_name=name.casefold(),
+                    defaults={"name": name},
+                )
+                tags.append(tag)
+            self.instance.tags.set(tags)
 
 
 class TaskCreateForm(TaskForm):

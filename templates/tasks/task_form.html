@@ -5,6 +5,7 @@
 {% if templates %}<form method="get" class="template-picker"><label>Заполнить из шаблона <select name="template" onchange="this.form.submit()"><option value="">Выберите шаблон</option>{% for item in templates %}<option value="{{ item.pk }}" {% if selected_template.pk == item.pk %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></label><noscript><button class="btn" type="submit">Применить</button></noscript></form>{% endif %}
 <form method="post" class="form-card task-edit-form">{% csrf_token %}
   {{ form.non_field_errors }}
+  <datalist id="task-tag-options">{% for tag in task_tags %}<option value="{{ tag.name }}"></option>{% endfor %}</datalist>
   <div class="task-form-grid">{% for field in form %}<div class="field field-{{ field.name }}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<div class="error">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
   {% if workload_ranking %}
   <div class="workload-panel">

@@ -1,15 +1,19 @@
-<section class="sound-settings-panel" id="sound-settings" hidden aria-label="Настройки звуков">
-  <strong>Звуки RaTracker</strong>
-  <p class="muted">По умолчанию выключены. Настройки звука сохраняются в этом браузере.</p>
-  <label>Уведомления <input type="checkbox" name="notifications"></label>
-  <label>Действия и пасхалки <input type="checkbox" name="effects"></label>
-  <label>Шаги мышки <input type="checkbox" name="footsteps"></label>
+<section class="sound-settings-panel" id="sound-settings" hidden aria-label="Настройки звуков и мышки">
+  <strong>Звуки и мышка RaTracker</strong>
+  <p class="muted">Звуковые и визуальные эффекты настраиваются независимо. Настройки сохраняются в этом браузере.</p>
+  <label>Звуки уведомлений <input type="checkbox" name="notifications"></label>
+  <label>Звуки действий и пасхалок <input type="checkbox" name="effects"></label>
+  <label>Звуковые шаги мышки <input type="checkbox" name="footsteps"></label>
+  <label>Показывать мышку <input type="checkbox" name="mouseEnabled"></label>
+  <label>Оставлять следы лапок <input type="checkbox" name="pawTrail"></label>
+  <label>Показывать реакции и сырные эффекты <input type="checkbox" name="mouseEffects"></label>
   <label>Громкость <input type="range" name="volume" min="0" max="100" step="5"><span data-volume-value>25%</span></label>
   <p class="mouse-collection" aria-live="polite">Сырная копилка: 🧀 <strong data-cheese-count>0</strong>
     <small data-cheese-title>Начинающий мышелов</small>
     <small>Поймано: <span data-mouse-catches>0</span> · Скорость: +<span data-mouse-speed>0</span>%</small>
     <small data-mouse-sync>Синхронизация…</small>
   </p>
+  <div class="mouse-unlocks"><strong>Открытия за поимки</strong><p data-mouse-unlocks aria-live="polite"></p></div>
   <div class="mouse-shop" aria-label="Сырная лавка">
     <strong>Сырная лавка</strong>
     <p class="muted">Купленные вещи остаются у мышки. Цвета меняются случайно при каждом появлении.</p>

@@ -17,6 +17,7 @@
   <a class="filter-chip {% if filters.quick == 'current' %}active{% endif %}" href="?quick=current">Текущие</a>
   <a class="filter-chip danger-chip {% if filters.quick == 'overdue' %}active{% endif %}" href="?quick=overdue">Просроченные</a>
   <a class="filter-chip {% if filters.quick == 'today' %}active{% endif %}" href="?quick=today">Сегодня</a>
+  <a class="filter-chip {% if filters.quick == 'soon' %}active{% endif %}" href="?quick=soon">Срок до 7 дней</a>
   <a class="filter-chip review-chip {% if filters.quick == 'review' %}active{% endif %}" href="?quick=review">На проверке</a>
   <a class="filter-chip revision-chip {% if filters.quick == 'revision' %}active{% endif %}" href="?quick=revision">На доработке</a>
   <a class="filter-chip {% if filters.quick == 'done' %}active{% endif %}" href="?quick=done">Выполненные</a>
@@ -43,6 +44,7 @@
     <form method="get" class="filters auto-filter advanced-filters">
       <select name="status" aria-label="Статус" onchange="this.form.submit()"><option value="">Все статусы</option>{% for value,label in statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
       <select name="priority" aria-label="Приоритет" onchange="this.form.submit()"><option value="">Все приоритеты</option>{% for value,label in priorities %}<option value="{{ value }}" {% if filters.priority == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      <select name="tag" aria-label="Проект или метка" onchange="this.form.submit()"><option value="">Все проекты и метки</option>{% for tag in task_tags %}<option value="{{ tag.pk }}" {% if filters.tag == tag.pk|stringformat:'s' %}selected{% endif %}>{{ tag.name }}</option>{% endfor %}</select>
       {% if is_manager %}
         <select name="assigned" aria-label="Исполнитель" onchange="this.form.submit()"><option value="">Все исполнители</option><option value="me" {% if filters.assigned == "me" %}selected{% endif %}>Мои задачи (исполнитель или соисполнитель)</option>{% for employee in employees %}<option value="{{ employee.pk }}" {% if filters.assigned == employee.pk|stringformat:'s' %}selected{% endif %}>{{ employee.get_full_name|default:employee.username }}</option>{% endfor %}</select>
         <select name="responsible" aria-label="Руководитель" onchange="this.form.submit()"><option value="">Все руководители</option>{% for manager in managers %}<option value="{{ manager.pk }}" {% if filters.responsible == manager.pk|stringformat:'s' %}selected{% endif %}>{{ manager.get_full_name|default:manager.username }}</option>{% endfor %}</select>

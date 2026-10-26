@@ -5,7 +5,6 @@ NOT estimated hours or a performance rating of the employee.
 """
 from datetime import timedelta
 
-from django.db.models import Q
 from django.utils import timezone
 
 from .models import EmployeeAbsence, Task

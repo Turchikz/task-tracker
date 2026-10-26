@@ -23,6 +23,27 @@ def important_file_upload_to(instance, filename):
     return f"important_files/{instance.document_id}/{uuid4().hex}{extension}"
 
 
+class TaskTag(models.Model):
+    """Department-wide task label, usually used to group a customer project."""
+
+    name = models.CharField("Метка", max_length=80)
+    normalized_name = models.CharField(max_length=80, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Метка задачи"
+        verbose_name_plural = "Метки задач"
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.strip()
+        self.normalized_name = self.name.casefold()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class Task(models.Model):
     class Status(models.TextChoices):
         NEW = "new", "Новая"
@@ -70,6 +91,12 @@ class Task(models.Model):
         blank=True,
         related_name="collaborating_tasks",
         verbose_name="Дополнительные исполнители",
+    )
+    tags = models.ManyToManyField(
+        TaskTag,
+        blank=True,
+        related_name="tasks",
+        verbose_name="Метки",
     )
     status = models.CharField("Статус", max_length=20, choices=Status.choices, default=Status.NEW, db_index=True)
     priority = models.CharField("Приоритет", max_length=20, choices=Priority.choices, default=Priority.NORMAL, db_index=True)

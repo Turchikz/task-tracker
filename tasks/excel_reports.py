@@ -5,8 +5,8 @@ import xlsxwriter
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import EmployeeAbsence, Task
-from .services import WORKLOAD_STATUSES, get_manager_analytics, get_workload_ranking
+from .models import Task
+from .services import get_manager_analytics, get_workload_ranking
 
 
 def build_manager_excel(date_from, date_to):

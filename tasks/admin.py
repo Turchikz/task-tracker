@@ -12,10 +12,18 @@ from .models import (
     TaskHandover,
     TaskMemberProgress,
     TaskTemplate,
+    TaskTag,
     WorkCalendarDay,
     RouletteTopic,
 )
 from .permissions import assignable_users, manager_users
+
+
+@admin.register(TaskTag)
+class TaskTagAdmin(admin.ModelAdmin):
+    list_display = ("name", "created_at")
+    search_fields = ("name",)
+    readonly_fields = ("normalized_name", "created_at")
 
 
 @admin.register(RouletteTopic)
@@ -63,10 +71,12 @@ class TaskAdmin(admin.ModelAdmin):
         "assigned_to",
         "additional_assignees",
         "responsible_manager",
+        "tags",
     )
     search_fields = (
         "title",
         "description",
+        "tags__name",
         "assigned_to__username",
         "assigned_to__first_name",
         "assigned_to__last_name",
@@ -87,7 +97,7 @@ class TaskAdmin(admin.ModelAdmin):
         "revision_reason",
     )
     list_select_related = ("assigned_to", "created_by", "responsible_manager")
-    filter_horizontal = ("additional_assignees",)
+    filter_horizontal = ("additional_assignees", "tags")
     date_hierarchy = "due_date"
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

@@ -1,11 +1,9 @@
-Текущая версия: **0.7.0**
-
 # Версионирование и релизы
 
 ## Текущая версия
 
 ```text
-0.5.0
+0.19.9
 ```
 
 Версия хранится в корневом файле:
@@ -41,7 +39,7 @@ MAJOR.MINOR.PATCH
 Пример:
 
 ```text
-0.5.0 → 0.5.1
+0.19.9 → 0.19.10
 ```
 
 ### MINOR
@@ -51,7 +49,7 @@ MAJOR.MINOR.PATCH
 Пример:
 
 ```text
-0.5.1 → 0.6.0
+0.19.9 → 0.20.0
 ```
 
 ### MAJOR
@@ -78,25 +76,23 @@ MAJOR.MINOR.PATCH
 Windows:
 
 ```powershell
-git tag -a v0.5.0 -m "Task Tracker v0.5.0"
-git push origin v0.5.0
+git tag -a v0.19.9 -m "Task Tracker v0.19.9"
+git push origin v0.19.9
 ```
 
 Linux:
 
 ```bash
-git tag -a v0.5.0 -m "Task Tracker v0.5.0"
-git push origin v0.5.0
+git tag -a v0.19.9 -m "Task Tracker v0.19.9"
+git push origin v0.19.9
 ```
 
 ## Следующие версии
 
-Ориентировочно:
+Исторический план ниже оставлен для контекста; пункты до `0.19.9` уже реализованы.
 
 ```text
-0.5.x — стабилизация текущего набора функций
-0.6.0 — full-width UI / рефакторинг
-0.7.0 — responsible manager / bulk actions / global search / saved filters / portable backup
-0.7.0 — production reliability / observability
-1.0.0 — стабильная внутренняя версия
+0.19.x — улучшение доступности и стабилизация интерфейса
+0.20.0 — чек-листы и дополнительные рабочие представления
+1.0.0 — стабильная внутренняя версия после пилота, проверки восстановления и формализации аудита
 ```

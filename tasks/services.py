@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Q
 from django.utils import timezone
 
 from .models import EmployeeAbsence, Task, TaskEvent

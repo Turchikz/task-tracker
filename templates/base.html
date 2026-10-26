@@ -18,36 +18,36 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="{% static 'css/app.css' %}">
-  <link rel="stylesheet" href="{% static 'css/task_review.css' %}?v=0912">
-  <link rel="stylesheet" href="{% static 'css/brand.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/task_review.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/brand.css' %}?v={{ app_version }}">
 
   {% block extra_css %}{% endblock %}
-  <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'css/theme.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=080">
-  <link rel="stylesheet" href="{% static 'css/components.css' %}?v=081">
-  <link rel="stylesheet" href="{% static 'css/pages.css' %}?v=080">
-  <script defer src="{% static 'js/ux.js' %}?v=080"></script>
-  <link rel="stylesheet" href="{% static 'css/microinteractions.css' %}?v=096">
-  <link rel="stylesheet" href="{% static 'css/team_tasks.css' %}?v=083">
+  <link rel="stylesheet" href="{% static 'css/layout.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}?v={{ app_version }}">
+  <script defer src="{% static 'js/ux.js' %}?v={{ app_version }}"></script>
+  <link rel="stylesheet" href="{% static 'css/microinteractions.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/team_tasks.css' %}?v={{ app_version }}">
   <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 
-  <script defer src="{% static 'js/app.js' %}"></script>
-  <script defer src="{% static 'js/theme_toggle.js' %}?v=0912"></script>
-  <script defer src="{% static 'js/assignees.js' %}?v=090"></script>
-  <script defer src="{% static 'js/notification_drawer.js' %}?v=090"></script>
-  <link rel="stylesheet" href="{% static 'css/v090.css' %}?v=090">
-  <link rel="stylesheet" href="{% static 'css/soundscape.css' %}?v=0915">
-  <link rel="stylesheet" href="{% static 'css/feature_ideas.css' %}?v=0912">
-  <link rel="stylesheet" href="{% static 'css/chat.css' %}?v=0912">
-  <script defer src="{% static 'js/soundscape.js' %}?v=0915"></script>
-  <script defer src="{% static 'js/chat_badge.js' %}?v=099"></script>
-  <script defer src="{% static 'js/chat_notifications.js' %}?v=0910"></script>
-  <link rel="stylesheet" href="{% static 'css/release096.css' %}?v=096">
-  <link rel="stylesheet" href="{% static 'css/roulette.css' %}?v=0917">
-  <script defer src="{% static 'js/roulette.js' %}?v=0917"></script>
-  <link rel="stylesheet" href="{% static 'css/important_files.css' %}?v=0918">
+  <script defer src="{% static 'js/app.js' %}?v={{ app_version }}"></script>
+  <script defer src="{% static 'js/theme_toggle.js' %}?v={{ app_version }}"></script>
+  <script defer src="{% static 'js/assignees.js' %}?v={{ app_version }}"></script>
+  <script defer src="{% static 'js/notification_drawer.js' %}?v={{ app_version }}"></script>
+  <link rel="stylesheet" href="{% static 'css/v090.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/soundscape.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/feature_ideas.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/chat.css' %}?v={{ app_version }}">
+  <script defer src="{% static 'js/soundscape.js' %}?v={{ app_version }}"></script>
+  <script defer src="{% static 'js/chat_badge.js' %}?v={{ app_version }}"></script>
+  <script defer src="{% static 'js/chat_notifications.js' %}?v={{ app_version }}"></script>
+  <link rel="stylesheet" href="{% static 'css/release096.css' %}?v={{ app_version }}">
+  <link rel="stylesheet" href="{% static 'css/roulette.css' %}?v={{ app_version }}">
+  <script defer src="{% static 'js/roulette.js' %}?v={{ app_version }}"></script>
+  <link rel="stylesheet" href="{% static 'css/important_files.css' %}?v={{ app_version }}">
 </head>
 <body{% if user.is_authenticated %} data-chat-notification-settings="{% url 'chat_notification_settings' %}" data-chat-notification-events="{% url 'chat_notification_events' %}" data-chat-user="{{ user.pk }}" data-sound-user="{{ user.pk }}" data-sound-feed="{% url 'sound_notifications_feed' %}" data-mouse-wallet="{% url 'mouse_wallet' %}" data-mouse-image="{% static 'img/rat-brand.png' %}"{% endif %}>
 <header class="topbar" data-site-header>
@@ -58,31 +58,36 @@
   {% if user.is_authenticated %}
   <nav class="primary-nav" aria-label="Основная навигация">
     {% if is_manager %}
-      <a href="{% url 'manager_dashboard' %}" class="{% if request.resolver_match.url_name == 'manager_dashboard' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'manager_dashboard' %}aria-current="page"{% endif %}>Дашборд</a>
+      <a href="{% url 'manager_dashboard' %}" class="{% if request.resolver_match.url_name == 'manager_dashboard' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'manager_dashboard' %}aria-current="page"{% endif %}>Обзор</a>
     {% else %}
       <a href="{% url 'my_today' %}" class="{% if request.resolver_match.url_name == 'my_today' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'my_today' %}aria-current="page"{% endif %}>Сегодня</a>
     {% endif %}
     <a href="{% url 'task_list' %}" class="{% if request.resolver_match.url_name == 'task_list' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'task_list' %}aria-current="page"{% endif %}>Задачи</a>
-    <a href="{% url 'department_chat' %}" class="{% if request.resolver_match.url_name == 'department_chat' %}is-current{% endif %}">Чат <span id="chat-nav-badge" class="chat-nav-badge" hidden></span></a>
-    <a href="{% url 'feature_ideas' %}" class="{% if request.resolver_match.url_name == 'feature_ideas' %}is-current{% endif %}">Идеи</a>
     <a href="{% url 'kanban' %}" class="{% if request.resolver_match.url_name == 'kanban' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'kanban' %}aria-current="page"{% endif %}>Канбан</a>
     <a href="{% url 'calendar' %}" class="{% if request.resolver_match.url_name == 'calendar' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'calendar' %}aria-current="page"{% endif %}>Календарь</a>
-    {% if is_manager %}<a href="{% url 'workload_timeline' %}" class="{% if request.resolver_match.url_name == 'workload_timeline' %}is-current{% endif %}" {% if request.resolver_match.url_name == 'workload_timeline' %}aria-current="page"{% endif %}>Загрузка</a>{% endif %}
+    {% if is_manager %}<a href="{% url 'review_queue' %}" class="nav-review-link{% if request.resolver_match.url_name == 'review_queue' %} is-current{% endif %}" {% if request.resolver_match.url_name == 'review_queue' %}aria-current="page"{% endif %}>Проверка{% if pending_review_count %}<span class="badge">{{ pending_review_count }}</span>{% endif %}</a>{% endif %}
     <details class="nav-dropdown" data-menu>
-      <summary class="nav-menu-trigger{% if request.resolver_match.url_name == 'analytics' or request.resolver_match.url_name == 'activity_feed' or request.resolver_match.url_name == 'review_queue' or request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'template_list' or request.resolver_match.url_name == 'roulette_topics' or request.resolver_match.url_name == 'roulette_topic' or request.resolver_match.url_name == 'important_files' or request.resolver_match.url_name == 'important_file_detail' or request.resolver_match.url_name == 'important_file_create' or request.resolver_match.url_name == 'important_file_edit' %} is-current{% endif %}">Ещё</summary>
-      <div class="dropdown-panel" role="group" aria-label="Дополнительные разделы">
-        <a href="{% url 'roulette_topics' %}">Рулетка</a>
-        <a href="{% url 'important_files' %}">Важные файлы</a>
+      <summary class="nav-menu-trigger{% if request.resolver_match.url_name == 'analytics' or request.resolver_match.url_name == 'activity_feed' or request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'template_list' or request.resolver_match.url_name == 'workload_timeline' or request.resolver_match.url_name == 'workload_guide' or request.resolver_match.url_name == 'notifications' or request.resolver_match.url_name == 'department_chat' or request.resolver_match.url_name == 'feature_ideas' or request.resolver_match.url_name == 'roulette_topics' or request.resolver_match.url_name == 'roulette_topic' or request.resolver_match.url_name == 'important_files' or request.resolver_match.url_name == 'important_file_detail' or request.resolver_match.url_name == 'important_file_create' or request.resolver_match.url_name == 'important_file_edit' %} is-current{% endif %}" aria-label="Дополнительные разделы">Ещё</summary>
+      <div class="dropdown-panel nav-sections-panel" role="group" aria-label="Дополнительные разделы">
         {% if is_manager %}
-          <a href="{% url 'review_queue' %}">Проверка{% if pending_review_count %} <span class="badge">{{ pending_review_count }}</span>{% endif %}</a>
-          <a href="{% url 'analytics' %}">Аналитика</a>
-          <a href="{% url 'activity_feed' %}">Активность</a>
-          <a href="{% url 'absences' %}">Отсутствия</a>
-          <a href="{% url 'template_list' %}">Шаблоны</a>
-          <a href="{% url 'workload_guide' %}">Как считается нагрузка</a>
-        {% else %}
-          <a href="{% url 'notifications' %}">Уведомления</a>
+          <section class="nav-menu-section" aria-label="Управление отделом">
+            <span class="nav-menu-section-title">Управление отделом</span>
+            <a href="{% url 'workload_timeline' %}" {% if request.resolver_match.url_name == 'workload_timeline' %}aria-current="page"{% endif %}>Загрузка сотрудников</a>
+            <a href="{% url 'analytics' %}" {% if request.resolver_match.url_name == 'analytics' %}aria-current="page"{% endif %}>Аналитика</a>
+            <a href="{% url 'activity_feed' %}" {% if request.resolver_match.url_name == 'activity_feed' %}aria-current="page"{% endif %}>Активность</a>
+            <a href="{% url 'absences' %}" {% if request.resolver_match.url_name == 'absences' %}aria-current="page"{% endif %}>Отсутствия</a>
+            <a href="{% url 'template_list' %}" {% if request.resolver_match.url_name == 'template_list' %}aria-current="page"{% endif %}>Шаблоны задач</a>
+            <a href="{% url 'workload_guide' %}" {% if request.resolver_match.url_name == 'workload_guide' %}aria-current="page"{% endif %}>Как считается нагрузка</a>
+          </section>
         {% endif %}
+        <section class="nav-menu-section" aria-label="Общие разделы">
+          <span class="nav-menu-section-title">Общие разделы</span>
+          <a href="{% url 'important_files' %}" {% if request.resolver_match.url_name == 'important_files' or request.resolver_match.url_name == 'important_file_detail' or request.resolver_match.url_name == 'important_file_create' or request.resolver_match.url_name == 'important_file_edit' %}aria-current="page"{% endif %}>Важные файлы</a>
+          <a href="{% url 'notifications' %}" {% if request.resolver_match.url_name == 'notifications' %}aria-current="page"{% endif %}>Все уведомления</a>
+          <a href="{% url 'department_chat' %}" {% if request.resolver_match.url_name == 'department_chat' %}aria-current="page"{% endif %}>Чат отдела <span id="chat-nav-badge" class="chat-nav-badge" hidden></span></a>
+          <a href="{% url 'feature_ideas' %}" {% if request.resolver_match.url_name == 'feature_ideas' %}aria-current="page"{% endif %}>Идеи и предложения</a>
+          <a href="{% url 'roulette_topics' %}" {% if request.resolver_match.url_name == 'roulette_topics' or request.resolver_match.url_name == 'roulette_topic' %}aria-current="page"{% endif %}>Розыгрыши</a>
+        </section>
       </div>
     </details>
   </nav>

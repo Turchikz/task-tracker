@@ -1,9 +1,8 @@
 """Read *only* host-written backup metadata, never backup archive or secrets."""
-from datetime import datetime, timedelta, timezone as dt_timezone
+from datetime import datetime, timezone as dt_timezone
 from pathlib import Path
 import json
 
-from django.conf import settings
 from django.utils import timezone
 
 STATUS_PATH = Path("/app/backup_status/backup_status.json")

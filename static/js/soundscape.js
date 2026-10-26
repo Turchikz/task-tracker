@@ -3,7 +3,7 @@ const body=document.body, uid=body.dataset.soundUser;if(!uid)return;
 const key='ratracker:sound:'+uid, cheeseKey='ratracker:cheese:'+uid,
   earnedKey='ratracker:cheese-earned:'+uid, catchesKey='ratracker:catches:'+uid,
   wardrobeKey='ratracker:wardrobe:'+uid,
-  defaults={notifications:false,effects:false,footsteps:false,volume:25};
+  defaults={notifications:false,effects:false,footsteps:false,mouseEnabled:true,pawTrail:true,mouseEffects:true,volume:25};
 let prefs;try{prefs={...defaults,...JSON.parse(localStorage.getItem(key)||'{}')}}catch(_){prefs={...defaults}}
 function storedCount(key,fallback=0){try{const value=localStorage.getItem(key),number=Number(value);return value!==null&&Number.isSafeInteger(number)&&number>=0?number:fallback}catch(_){return fallback}}
 let cheese=storedCount(cheeseKey),earned=storedCount(earnedKey,cheese),catches=storedCount(catchesKey);
@@ -31,6 +31,22 @@ window.RaTrackerSound={play,settings:()=>({...prefs})};
 const settings=document.querySelector('#sound-settings'),opener=document.querySelector('[data-sound-open]');
 function mouseTitle(){return earned>=50?'Сырный магнат':earned>=10?'Опытный мышелов':'Начинающий мышелов'}
 function speedBonus(){return Math.round(Math.min(catches,30)*3.5)}
+const mouseUnlocks=[
+ {catches:5,name:'Рыжий окрас',type:'окрас'},
+ {catches:10,name:'Очки',type:'аксессуар'},
+ {catches:15,name:'Лавандовый окрас',type:'окрас'},
+ {catches:25,name:'Жилет',type:'аксессуар'},
+ {catches:30,name:'Ночной окрас',type:'окрас'},
+ {catches:50,name:'Бабочка',type:'аксессуар'},
+];
+function renderMouseUnlocks(){
+ const panel=settings?.querySelector('[data-mouse-unlocks]');if(!panel)return;
+ const lines=mouseUnlocks.map(item=>`${catches>=item.catches?'✓':'🔒'} ${item.catches} поимок — ${item.name}`);
+ const next=mouseUnlocks.find(item=>catches<item.catches);
+ if(next){const left=next.catches-catches,word=left===1?'поимка':left<5?'поимки':'поимок';lines.unshift(`До следующего открытия: ${left} ${word}`)}
+ else lines.unshift('Все открытия получены!');
+ panel.textContent=lines.join('\n');
+}
 function showCheese(){
  const count=settings?.querySelector('[data-cheese-count]');if(count)count.textContent=String(cheese);
  const title=settings?.querySelector('[data-cheese-title]');if(title)title.textContent=mouseTitle();
@@ -42,6 +58,7 @@ function showCheese(){
   button.textContent=wardrobe[item]?(item==='hat'?'Шапка куплена':'Шарфик куплен'):
     `${item==='hat'?'Купить шапку':'Купить шарфик'} — ${prices[item]} 🧀`;
  }
+ renderMouseUnlocks();
 }
 showCheese();
 const walletUrl=body.dataset.mouseWallet,queueKey='ratracker:mouse-queue:'+uid,
@@ -134,9 +151,9 @@ function buyOutfit(item){
  play('cheese');return true;
 }
 for(const item of ['hat','scarf'])settings?.querySelector(`[data-buy-${item}]`)?.addEventListener('click',()=>buyOutfit(item));
-if(settings&&opener){const names=['notifications','effects','footsteps','volume'];function render(){names.forEach(k=>{const el=settings.querySelector('[name='+k+']');if(el){if(k==='volume')el.value=prefs[k];else el.checked=!!prefs[k]}});settings.querySelector('[data-volume-value]').textContent=prefs.volume+'%'}
+if(settings&&opener){const names=['notifications','effects','footsteps','mouseEnabled','pawTrail','mouseEffects','volume'];function render(){names.forEach(k=>{const el=settings.querySelector('[name='+k+']');if(el){if(k==='volume')el.value=prefs[k];else el.checked=!!prefs[k]}});settings.querySelector('[data-volume-value]').textContent=prefs.volume+'%'}
 opener.addEventListener('click',()=>{render();settings.hidden=!settings.hidden;opener.setAttribute('aria-expanded',String(!settings.hidden));if(!settings.hidden)void syncWallet()});settings.querySelector('[data-sound-close]').addEventListener('click',()=>{settings.hidden=true;opener.setAttribute('aria-expanded','false')});
-names.forEach(k=>settings.querySelector('[name='+k+']')?.addEventListener('input',e=>{prefs[k]=k==='volume'?Number(e.target.value):e.target.checked;save();render()}));settings.querySelector('[data-sound-preview]').addEventListener('click',()=>{activated=true;play('catch')})}
+names.forEach(k=>settings.querySelector('[name='+k+']')?.addEventListener('input',e=>{prefs[k]=k==='volume'?Number(e.target.value):e.target.checked;save();if(k==='mouseEnabled'&&!prefs.mouseEnabled)window.RaTrackerMouse?.remove();render()}));settings.querySelector('[data-sound-preview]').addEventListener('click',()=>{activated=true;play('catch')})}
 document.addEventListener('ratracker:theme-changed',e=>play(e.detail.theme==='light'?'bulb-on':'bulb-off'));
 document.addEventListener('click',e=>{if(e.target.closest('[data-theme-menu-toggle]'))play('switch')});
 const feed=body.dataset.soundFeed;async function poll(){if(!feed||!prefs.notifications)return;try{const response=await fetch(feed,{credentials:'same-origin',cache:'no-store'});if(!response.ok)return;const data=await response.json();const sharedKey=key+':latest',shared=Number(localStorage.getItem(sharedKey)||0);if(latest===null){latest=Math.max(data.latest,shared);localStorage.setItem(sharedKey,String(latest));return}if(data.latest>Math.max(latest,shared)){latest=data.latest;localStorage.setItem(sharedKey,String(latest));play(data.kind==='revision_requested'?'revision':['overdue','due_soon'].includes(data.kind)?'due':data.kind==='assigned'?'assigned':data.kind==='accepted'?'accepted':'notice')}}catch(_){}}
@@ -170,7 +187,8 @@ function cheeseBurst(rect,gold){
  }
 }
 function dressMouse(mouse){
- if(!wardrobe.hat&&!wardrobe.scarf)return;
+ const unlockedGlasses=catches>=10,unlockedVest=catches>=25,unlockedBowtie=catches>=50;
+ if(!wardrobe.hat&&!wardrobe.scarf&&!unlockedGlasses&&!unlockedVest&&!unlockedBowtie)return;
  const outfit=document.createElement('span');outfit.className='ratracker-outfit';outfit.setAttribute('aria-hidden','true');
  const hatIndex=Math.floor(Math.random()*outfitColors.length);
  if(wardrobe.hat){
@@ -183,36 +201,63 @@ function dressMouse(mouse){
   scarf.style.setProperty('--scarf-color',outfitColors[(hatIndex+1+Math.floor(Math.random()*(outfitColors.length-1)))%outfitColors.length]);
   outfit.append(scarf);
  }
+ if(unlockedGlasses){const glasses=document.createElement('span');glasses.className='ratracker-glasses';outfit.append(glasses)}
+ if(unlockedVest){const vest=document.createElement('span');vest.className='ratracker-vest';outfit.append(vest)}
+ if(unlockedBowtie){const bowtie=document.createElement('span');bowtie.className='ratracker-bowtie';outfit.append(bowtie)}
  mouse.append(outfit);
+}
+function mouseVariant(){
+ const variants=[];
+ if(catches>=5)variants.push('cinnamon');
+ if(catches>=15)variants.push('lavender');
+ if(catches>=30)variants.push('midnight');
+ return variants.length?variants[Math.floor(Math.random()*variants.length)]:'classic';
+}
+function leaveCrumb(mouse){
+ if(!mouse.isConnected||document.hidden)return;
+ const rect=mouse.getBoundingClientRect(),crumb=document.createElement('span');
+ crumb.className='ratracker-crumb';crumb.textContent='🧀';crumb.setAttribute('aria-hidden','true');
+ crumb.style.left=`${Math.max(4,Math.min(window.innerWidth-22,rect.left+34))}px`;
+ crumb.style.top=`${Math.max(4,Math.min(window.innerHeight-22,rect.bottom-26))}px`;
+ document.body.append(crumb);setTimeout(()=>crumb.remove(),1500);
+}
+function mouseToast(message){
+ if(!prefs.mouseEffects)return;
+ const toast=document.createElement('div');toast.className='mouse-toast';toast.setAttribute('role','status');toast.textContent=message;
+ document.body.append(toast);setTimeout(()=>toast.remove(),2400);
 }
 function spawn(options={}){
  // Manual test may run immediately; automatic runs require the visible focused tab.
- if(!options.force&&(document.hidden||!document.hasFocus()))return false;
+ if(!prefs.mouseEnabled||(!options.force&&(document.hidden||!document.hasFocus())))return false;
  if(runner){runner.remove();runner=null;stopTrail()}
  const b=document.createElement('button'),gold=options.legendary===true||(options.legendary!==false&&Math.random()<.01),right=Math.random()<.5;
+ const reactionRoll=Math.random();
+ const reaction=options.reaction||(!gold?(reactionRoll<.025?'peek':reactionRoll<.055?'crumbs':reactionRoll<.07?'escape':'none'):'none');
  b.type='button';b.className='ratracker-runner'+(gold?' legendary':'');
+ b.classList.add('variant-'+mouseVariant());
+ if(reaction!=='none')b.classList.add('reaction-'+reaction);
  b.title='Поймать мышку';b.setAttribute('aria-label','Поймать мышку');
  b.style.setProperty('--from',right?'calc(100vw + 80px)':'-80px');
  b.style.setProperty('--to',right?'-80px':'calc(100vw + 80px)');
  // Each capture raises speed 3.5%, capped at +105% and a two-second run.
- b.style.animationDuration=Math.max(2,(3.9+Math.random()*1.9)/(1+Math.min(catches,30)*.035)).toFixed(2)+'s';
+ b.style.animationDuration=(reaction==='escape'?1.55:Math.max(2,(3.9+Math.random()*1.9)/(1+Math.min(catches,30)*.035))).toFixed(2)+'s';
  b.classList.toggle('running-left',right);
  const sprite=document.createElement('span');sprite.className='ratracker-mouse-sprite';sprite.setAttribute('aria-hidden','true');b.append(sprite);dressMouse(b);
+ if(reaction==='peek'){const hint=document.createElement('span');hint.className='ratracker-mouse-reaction';hint.textContent='👀';hint.setAttribute('aria-hidden','true');b.append(hint)}
  document.body.append(b);runner=b;
- trailTimer=window.setInterval(()=>leaveFootprint(b,!right),430);
+ trailTimer=window.setInterval(()=>{if(prefs.pawTrail)leaveFootprint(b,!right);if(reaction==='crumbs')leaveCrumb(b)},430);
  let caught=false;
  b.addEventListener('click',()=>{
   caught=true;streak++;catches++;stopTrail();play(gold?'legendary':'catch');
   const rect=b.getBoundingClientRect(),previousEarned=earned,reward=gold?5:1;
   cheese+=reward;earned+=reward;saveGame();queueWallet({action:'catch',reward});
-  showCheese();cheeseBurst(rect,gold);
+  showCheese();
   const quotes=['Попалась! Мышка оставила сыр.', 'Быстрая реакция! Сыр ваш.', 'Мышка поймана — добыча в копилке.'];
-  const toast=document.createElement('div');toast.className='mouse-toast';toast.setAttribute('role','status');
   const milestone=previousEarned<50&&earned>=50?' · Новое звание: Сырный магнат!':previousEarned<10&&earned>=10?' · Новое звание: Опытный мышелов!':'';
-  toast.textContent=(gold?'Золотая мышка! +5 🧀':`${quotes[Math.floor(Math.random()*quotes.length)]} +1 🧀`)+` · В копилке: ${cheese} · Поймано: ${catches}`+milestone;
-  document.body.append(toast);setTimeout(()=>toast.remove(),2400);b.remove();if(runner===b)runner=null;
+  if(prefs.mouseEffects){cheeseBurst(rect,gold);mouseToast((gold?'Золотая мышка! +5 🧀':`${quotes[Math.floor(Math.random()*quotes.length)]} +1 🧀`)+` · В копилке: ${cheese} · Поймано: ${catches}`+milestone)}
+  b.remove();if(runner===b)runner=null;
  },{once:true});
- b.addEventListener('animationend',()=>{if(!caught)b.remove();if(runner===b){stopTrail();runner=null}},{once:true});
+ b.addEventListener('animationend',event=>{if(event?.target&&event.target!==b)return;if(!caught){b.remove();if(reaction==='escape'){play('escape');mouseToast('Мышка ускользнула — попробуем поймать следующую!')}}if(runner===b){stopTrail();runner=null}});
  play('footsteps',{pan:right?1:-1});
  setTimeout(()=>{b.remove();if(runner===b){stopTrail();runner=null}},9500);
  return true;
@@ -222,7 +267,7 @@ function spawn(options={}){
 window.RaTrackerMouse={
  spawn:(options={})=>spawn({...options,force:true}),
  remove:()=>{if(runner){runner.remove();runner=null;stopTrail()}},
- status:()=>({active:!!runner,streak,catches,cheese,earned,speedBonus:speedBonus(),wardrobe:{...wardrobe},title:mouseTitle(),version:'0.9.15',enabled:true})
+ status:()=>({active:!!runner,streak,catches,cheese,earned,speedBonus:speedBonus(),wardrobe:{...wardrobe},unlocks:mouseUnlocks.filter(item=>catches>=item.catches).map(item=>item.name),title:mouseTitle(),version:'0.19.9',enabled:prefs.mouseEnabled})
 };
 function resetClock(){lastTick=performance.now();if(runner){runner.remove();runner=null;stopTrail()}}
 document.addEventListener('visibilitychange',resetClock);
@@ -236,5 +281,5 @@ setInterval(()=>{
  activeMs+=elapsed;
  if(activeMs>=nextRun){activeMs=0;nextRun=(10+Math.random()*10)*60000;spawn();}
 },1000);
-}else{window.RaTrackerMouse={spawn:()=>false,remove:()=>{},status:()=>({active:false,catches,cheese,earned,speedBonus:speedBonus(),wardrobe:{...wardrobe},title:mouseTitle(),version:'0.9.15',enabled:false,reason:'desktop-or-reduced-motion'})};}
+}else{window.RaTrackerMouse={spawn:()=>false,remove:()=>{},status:()=>({active:false,catches,cheese,earned,speedBonus:speedBonus(),wardrobe:{...wardrobe},unlocks:mouseUnlocks.filter(item=>catches>=item.catches).map(item=>item.name),title:mouseTitle(),version:'0.19.9',enabled:false,reason:'desktop-or-reduced-motion'})};}
 })();

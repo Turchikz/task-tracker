@@ -6,6 +6,7 @@
   <div>
     <div class="task-head-badges"><span class="task-id">#{{ task.pk }}</span>{% include "tasks/_status_badge.html" with task=task %}{% include "tasks/_priority_badge.html" with task=task %}<span class="deadline {{ task.deadline_state }}">{{ task.deadline_label }}</span></div>
     <h1>{{ task.title }}</h1>
+    {% if task.tags.all %}<div class="task-tag-list task-detail-tags" aria-label="Метки задачи">{% for tag in task.tags.all %}<span class="task-tag">{{ tag.name }}</span>{% endfor %}</div>{% endif %}
     <p class="muted team-header-line">{% include "partials/team_avatars.html" with task=task %} Исполнители: <strong>{{ task.team_names }}</strong></p>
   </div>
 </div>

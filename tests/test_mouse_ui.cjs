@@ -23,7 +23,7 @@ function setup(reducedMotion = false, values = new Map(), wallet = null) {
   function element(tag) {
     return {
       tag, listeners: {}, style: { setProperty(name, value) { this[name] = value; } },
-      classList: { toggle() {} }, isConnected: false,
+      classList: { toggle() {}, add(...names) { this.names = [...(this.names || []), ...names]; } }, isConnected: false,
       setAttribute() {},
       addEventListener(name, callback) { this.listeners[name] = callback; },
       append(...children) { children.forEach(child => { child.isConnected = true; nodes.push(child); }); },
@@ -175,4 +175,53 @@ test('reduced-motion preference disables mouse and paw trail', () => {
   const app = setup(true);
   assert.equal(app.window.RaTrackerMouse.spawn(), false);
   assert.equal(app.nodes.length, 0);
+});
+
+test('catch milestones unlock rat variants and cosmetic accessories', () => {
+  const values = new Map([
+    ['ratracker:cheese:7', '0'], ['ratracker:cheese-earned:7', '0'],
+    ['ratracker:catches:7', '50'],
+  ]);
+  const app = setup(false, values);
+  assert.deepEqual(Array.from(app.window.RaTrackerMouse.status().unlocks), [
+    'Рыжий окрас', 'Очки', 'Лавандовый окрас', 'Жилет', 'Ночной окрас', 'Бабочка',
+  ]);
+  assert.equal(app.window.RaTrackerMouse.spawn({ legendary: false }), true);
+  assert.ok(app.nodes.some(node => node.className === 'ratracker-glasses'));
+  assert.ok(app.nodes.some(node => node.className === 'ratracker-vest'));
+  assert.ok(app.nodes.some(node => node.className === 'ratracker-bowtie'));
+  assert.ok(app.nodes.some(node => node.className === 'ratracker-outfit'));
+});
+
+test('mouse display, paw trails and visual effects are independent preferences', () => {
+  const values = new Map([['ratracker:sound:7', JSON.stringify({ mouseEnabled: false })]]);
+  const disabled = setup(false, values);
+  assert.equal(disabled.window.RaTrackerMouse.spawn(), false);
+
+  const noVisualEffects = setup(false, new Map([['ratracker:sound:7', JSON.stringify({ pawTrail: false, mouseEffects: false })]]));
+  assert.equal(noVisualEffects.window.RaTrackerMouse.spawn({ legendary: false }), true);
+  noVisualEffects.intervals.at(-1)();
+  assert.equal(noVisualEffects.nodes.some(node => node.className === 'ratracker-paw'), false);
+  const mouse = noVisualEffects.nodes.find(node => node.className.startsWith('ratracker-runner'));
+  mouse.listeners.click();
+  assert.equal(noVisualEffects.nodes.some(node => node.className === 'ratracker-cheese-bit'), false);
+  assert.equal(noVisualEffects.nodes.some(node => node.className === 'mouse-toast'), false);
+});
+
+test('rare mouse reactions show a peek, leave crumbs or escape harmlessly', () => {
+  const app = setup();
+  app.window.RaTrackerMouse.spawn({ reaction: 'peek' });
+  assert.ok(app.nodes.some(node => node.className === 'ratracker-mouse-reaction'));
+  app.window.RaTrackerMouse.remove();
+
+  app.window.RaTrackerMouse.spawn({ reaction: 'crumbs' });
+  app.intervals.at(-1)();
+  assert.ok(app.nodes.some(node => node.className === 'ratracker-crumb'));
+  app.window.RaTrackerMouse.remove();
+
+  app.window.RaTrackerMouse.spawn({ reaction: 'escape' });
+  const escaped = app.nodes.findLast(node => node.className.startsWith('ratracker-runner'));
+  escaped.listeners.animationend();
+  assert.ok(app.nodes.some(node => node.className === 'mouse-toast' && node.textContent.includes('ускользнула')));
+  assert.equal(app.window.RaTrackerMouse.status().cheese, 0);
 });

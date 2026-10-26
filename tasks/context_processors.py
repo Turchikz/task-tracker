@@ -9,6 +9,7 @@ from .project_version import __version__
 def tasktracker_context(request):
     if not request.user.is_authenticated:
         return {
+            "app_version": __version__,
             "is_manager": False,
             "unread_notifications": 0,
             "action_notifications_count": 0,
