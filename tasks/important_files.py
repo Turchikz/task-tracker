@@ -5,11 +5,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch, Q
+from django.forms.widgets import FileInput
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
-from .models import ImportantFile, ImportantFileRevision
+
+from .models import ImportantFile, ImportantFileRevision, FileCategory
 from .permissions import is_manager
 
 
@@ -17,42 +19,73 @@ ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".odt", ".ods", 
 MAX_FILE_SIZE = 20 * 1024 * 1024
 
 
+class MultipleFileInput(FileInput):
+    allow_multiple_selected = True
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = [single_file_clean(data, initial)]
+        return result
+
+
 class ImportantFileForm(forms.ModelForm):
-    upload = forms.FileField(label="Файл", required=False, widget=forms.ClearableFileInput(attrs={"accept": ",".join(sorted(ALLOWED_EXTENSIONS))}))
+    uploads = MultipleFileField(
+        label="Файлы",
+        required=False,
+        widget=MultipleFileInput(attrs={
+            "accept": ",".join(sorted(ALLOWED_EXTENSIONS)),
+        })
+    )
 
     class Meta:
         model = ImportantFile
-        fields = ["title", "category", "description"]
+        fields = ["title", "category", "description"]  # Убрали category_group
         widgets = {"description": forms.Textarea(attrs={"rows": 3})}
 
-    def __init__(self, *args, require_file=False, **kwargs):
+    def __init__(self, *args, require_files=False, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["upload"].required = require_file
+        self.fields["uploads"].required = require_files
 
-    def clean_upload(self):
-        upload = self.cleaned_data.get("upload")
-        if upload:
-            if Path(upload.name).suffix.lower() not in ALLOWED_EXTENSIONS:
-                raise forms.ValidationError("Допустимы PDF, Word, Excel, ODT/ODS, текст и изображения JPG/PNG.")
-            if not 0 < upload.size <= MAX_FILE_SIZE:
-                raise forms.ValidationError("Размер файла должен быть от 1 байта до 20 МБ.")
-        return upload
+    def clean_uploads(self):
+        uploads = self.files.getlist("uploads")
+        if uploads:
+            for upload in uploads:
+                if Path(upload.name).suffix.lower() not in ALLOWED_EXTENSIONS:
+                    raise forms.ValidationError("Допустимы PDF, Word, Excel, ODT/ODS, текст и изображения JPG/PNG.")
+                if not 0 < upload.size <= MAX_FILE_SIZE:
+                    raise forms.ValidationError("Размер файла должен быть от 1 байта до 20 МБ.")
+        return uploads
 
 
 @login_required
 def index(request):
-    files = ImportantFile.objects.prefetch_related(Prefetch(
-        "versions", queryset=ImportantFileRevision.objects.select_related("uploaded_by"), to_attr="saved_versions"
-    ))
+    files = ImportantFile.objects.select_related("category").prefetch_related(
+        Prefetch("versions", queryset=ImportantFileRevision.objects.select_related("uploaded_by"), to_attr="saved_versions")
+    )
     query = request.GET.get("q", "").strip()[:100]
-    category = request.GET.get("category", "")
+    category_slug = request.GET.get("category", "")
+
     if query:
         files = files.filter(Q(title__icontains=query) | Q(description__icontains=query))
-    if category in ImportantFile.Category.values:
-        files = files.filter(category=category)
+
+    if category_slug:
+        files = files.filter(category__slug=category_slug)
+
+    categories = FileCategory.objects.filter(is_active=True)
+
     return render(request, "tasks/important_files.html", {
-        "files": files, "query": query, "category": category,
-        "categories": ImportantFile.Category.choices,
+        "files": files,
+        "query": query,
+        "category_slug": category_slug,
+        "categories": categories,
     })
 
 
@@ -61,21 +94,27 @@ def index(request):
 def create(request):
     if not is_manager(request.user):
         return HttpResponseForbidden("Добавлять документы может только руководитель.")
-    form = ImportantFileForm(request.POST or None, request.FILES or None, require_file=True)
+    form = ImportantFileForm(request.POST or None, request.FILES or None, require_files=True)
     if request.method == "POST" and form.is_valid():
         with transaction.atomic():
             document = form.save(commit=False)
             document.created_by = document.updated_by = request.user
             document.save()
-            upload = form.cleaned_data["upload"]
-            ImportantFileRevision.objects.create(
-                document=document, file=upload, original_name=Path(upload.name.replace("\\", "/")).name[:255],
-                size_bytes=upload.size, uploaded_by=request.user,
-            )
-        messages.success(request, "Файл добавлен.")
+
+            # Обработка множественных файлов
+            uploads = form.cleaned_data.get("uploads", [])
+            for upload in uploads:
+                ImportantFileRevision.objects.create(
+                    document=document,
+                    file=upload,
+                    original_name=Path(upload.name).name[:255],
+                    size_bytes=upload.size,
+                    uploaded_by=request.user,
+                )
+
+        messages.success(request, f"Файл(ы) добавлены ({len(uploads)} шт.).")
         return redirect("important_file_detail", pk=document.pk)
     return render(request, "tasks/important_file_form.html", {"form": form, "document": None})
-
 
 @login_required
 def detail(request, pk):

@@ -15,6 +15,9 @@ from .models import (
     TaskTag,
     WorkCalendarDay,
     RouletteTopic,
+    FileCategory,
+    ImportantFile,
+    ImportantFileRevision,
 )
 from .permissions import assignable_users, manager_users
 
@@ -246,3 +249,40 @@ class FeatureIdeaAdmin(admin.ModelAdmin):
 @admin.register(FeatureVote)
 class FeatureVoteAdmin(admin.ModelAdmin):
     list_display = ("idea", "user", "choice", "updated_at")
+
+
+@admin.register(FileCategory)
+class FileCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_active")
+    list_editable = ("is_active",)
+    search_fields = ("name",)
+    prepopulated_fields = {"slug": ("name",)}
+
+
+class ImportantFileRevisionInline(admin.TabularInline):
+    model = ImportantFileRevision
+    extra = 2  # Показывать 2 пустые строки для добавления файлов сразу
+    fields = ("file", "original_name", "uploaded_by")
+    readonly_fields = ("original_name", "uploaded_by")
+
+
+@admin.register(ImportantFile)
+class ImportantFileAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "updated_at")
+    list_filter = ("category",)
+    search_fields = ("title", "description")
+    inlines = [ImportantFileRevisionInline]
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if isinstance(instance, ImportantFileRevision) and not instance.pk:
+                instance.uploaded_by = request.user
+            instance.save()
+        formset.save_m2m()

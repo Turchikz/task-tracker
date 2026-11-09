@@ -718,16 +718,33 @@ class RouletteDraw(models.Model):
         return f"{self.topic.title} · {self.created_at:%d.%m.%Y %H:%M}"
 
 
-class ImportantFile(models.Model):
-    class Category(models.TextChoices):
-        REGULATIONS = "regulations", "Регламенты"
-        FORMS = "forms", "Формы и шаблоны"
-        GUIDES = "guides", "Инструкции"
-        OTHER = "other", "Прочее"
+class FileCategory(models.Model):
+    name = models.CharField("Название категории", max_length=100, unique=True)
+    slug = models.SlugField("Слаг (для URL)", unique=True, blank=True)
+    is_active = models.BooleanField("Активна", default=True)
 
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Категория важных файлов"
+        verbose_name_plural = "Категории важных файлов"
+
+    def __str__(self):
+        return self.name
+
+
+class ImportantFile(models.Model):
     title = models.CharField("Название", max_length=160)
     description = models.TextField("Описание", max_length=1000, blank=True)
-    category = models.CharField("Категория", max_length=16, choices=Category.choices, default=Category.OTHER)
+
+    category = models.ForeignKey(
+        FileCategory,
+        on_delete=models.SET_NULL,
+        related_name="important_files",
+        verbose_name="Категория",
+        null=True,
+        blank=True,
+    )
+
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="important_files_created")
     updated_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="important_files_updated")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -735,6 +752,8 @@ class ImportantFile(models.Model):
 
     class Meta:
         ordering = ["-updated_at", "-pk"]
+        verbose_name = "Важный файл (тема)"
+        verbose_name_plural = "Важные файлы (темы)"
 
     def __str__(self):
         return self.title
